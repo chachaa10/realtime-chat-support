@@ -1,0 +1,13 @@
+{
+  "indent": 2,
+  "lineWidth": 100,
+  "endOfLine": "lf",
+  "arrowParens": "always",
+  "insertFinalNewline": true,
+  "semi": true,
+  "sortTailwindcss": true,
+  "sortImports": true,
+  "printWidth": 100,
+  "singleQuote": true,
+  "useTabs": false
+}

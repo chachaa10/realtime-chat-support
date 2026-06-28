@@ -1,0 +1,24 @@
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { env } from '@repo/shared';
+import { db, schema } from '@repo/database';
+export const auth = betterAuth({
+  appName: 'realtime-chat-support',
+  database: drizzleAdapter(db, { provider: 'sqlite', schema, camelCase: false, usePlural: true }),
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
+  databaseHooks: {},
+  emailAndPassword: {
+    enabled: true,
+  },
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 5,
+    customRules: {
+      '/sign-in/email': { window: 60, max: 5 },
+      '/sign-up/email': { window: 60, max: 3 },
+    },
+  },
+
+});

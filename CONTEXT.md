@@ -1,0 +1,31 @@
+# Real-time Chat Support
+
+A real-time helpdesk chat support application. Customers submit tickets describing their issues; agents pick tickets from a queue and resolve them via real-time chat. Built to practice backend engineering (NestJS, WebSockets) with a deliberately separated frontend SPA.
+
+## Language
+
+**Ticket**:
+A container for a customer issue request. Holds metadata (subject, status, assignment) and owns the conversation.
+_Avoid_: Issue, case, conversation
+
+**Message**:
+A single unit of communication within a ticket's conversation. Belongs to exactly one ticket and one author.
+_Avoid_: Post, reply, comment
+
+**Conversation**:
+The message thread attached to a ticket. Not a first-class entity — it's the collection of Messages for a given Ticket.
+
+**Customer**:
+A person who submits tickets and participates in their conversation.
+_Avoid_: User, client, requester
+
+**Agent**:
+A staff member who resolves tickets by responding in the conversation.
+_Avoid_: Staff, support rep, operator
+
+**User**:
+Either a Customer or an Agent. The base identity handled by better-auth. Role discriminator: `customer | agent`.
+
+**Ticket Status**:
+One of: `Open` (submitted, awaiting agent), `In Progress` (agent accepted), `Resolved` (agent marked done).
+_Avoid_: Closed, Pending, Awaiting Customer
