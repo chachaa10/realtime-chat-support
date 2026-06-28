@@ -16,7 +16,7 @@ vi.mock('@repo/shared', () => {
   };
 });
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AuthModule } from '@thallesp/nestjs-better-auth';

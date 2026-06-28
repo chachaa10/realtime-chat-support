@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "test": "vitest run",
+    "test:watch": "vitest watch",
     "build": "tsdown src/main.ts --outDir dist",
     "typecheck": "tsc --noEmit",
     "start": "node dist/main.js"
