@@ -53,7 +53,7 @@ const createTables = [
     updated_at integer NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS profiles (
-    id text PRIMARY KEY, name text NOT NULL, role text NOT NULL,
+    id text PRIMARY KEY, role text NOT NULL,
     created_at integer NOT NULL
   )`,
 ];

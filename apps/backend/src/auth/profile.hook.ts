@@ -14,7 +14,6 @@ export class ProfileHook {
   async createProfile(user: { id: string; name: string }) {
     await this.db.insert(profiles).values({
       id: user.id,
-      name: user.name,
       role: 'customer',
       createdAt: Date.now(),
     });

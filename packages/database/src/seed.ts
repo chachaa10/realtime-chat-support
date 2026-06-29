@@ -59,7 +59,6 @@ async function seed() {
   await db.insert(schema.profiles).values(
     allUsers.map((u) => ({
       id: u.id,
-      name: u.name,
       role: agentIds.has(u.id) ? ('agent' as const) : ('customer' as const),
       createdAt: Date.now(),
     })),
