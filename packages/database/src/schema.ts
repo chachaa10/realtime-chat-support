@@ -1,16 +1,11 @@
 import { defineRelations } from 'drizzle-orm';
 
-import {
-  users,
-  sessions,
-  accounts,
-  verifications,
-} from './schemas/auth-schema';
-import { profiles } from './schemas/profile-schema';
-import { tickets } from './schemas/ticket-schema';
-import { messages } from './schemas/message-schema';
 import { attachments } from './schemas/attachment-schema';
+import { users, sessions, accounts, verifications } from './schemas/auth-schema';
+import { messages } from './schemas/message-schema';
+import { profiles } from './schemas/profile-schema';
 import { ticketEvents } from './schemas/ticket-event-schema';
+import { tickets } from './schemas/ticket-schema';
 
 export {
   users,

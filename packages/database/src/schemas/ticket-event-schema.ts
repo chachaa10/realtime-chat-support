@@ -22,7 +22,5 @@ export const ticketEvents = sqliteTable(
     reason: text('reason'),
     createdAt: integer('created_at').notNull(),
   },
-  (table) => [
-    index('idx_events_ticket_created').on(table.ticketId, table.createdAt),
-  ],
+  (table) => [index('idx_events_ticket_created').on(table.ticketId, table.createdAt)],
 );

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 
-import { SendMessageSchema, MessageSchema } from '../validations/message';
-import { CreateTicketSchema, TicketStatus } from '../validations/ticket';
-import { ProfileSchema } from '../validations/profile';
 import { LoginSchema, RegisterSchema } from '../validations/auth';
+import { SendMessageSchema, MessageSchema } from '../validations/message';
+import { ProfileSchema } from '../validations/profile';
+import { CreateTicketSchema, TicketStatus } from '../validations/ticket';
 
 describe('LoginSchema', () => {
   it('accepts valid login', () => {
@@ -61,9 +61,7 @@ describe('RegisterSchema', () => {
 
 describe('ProfileSchema', () => {
   it('accepts valid profile', () => {
-    expect(
-      ProfileSchema.safeParse({ id: '1', role: 'agent', createdAt: 1000 }).success,
-    ).toBe(true);
+    expect(ProfileSchema.safeParse({ id: '1', role: 'agent', createdAt: 1000 }).success).toBe(true);
   });
 });
 

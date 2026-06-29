@@ -2,9 +2,7 @@
   "version": "7",
   "dialect": "sqlite",
   "id": "31d58965-ad2a-446c-96b6-410765903568",
-  "prevIds": [
-    "5b563243-afba-4503-b78b-8ff400bb5ee9"
-  ],
+  "prevIds": ["5b563243-afba-4503-b78b-8ff400bb5ee9"],
   "ddl": [
     {
       "name": "accounts",
@@ -733,13 +731,9 @@
       "table": "verifications"
     },
     {
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -748,13 +742,9 @@
       "table": "accounts"
     },
     {
-      "columns": [
-        "message_id"
-      ],
+      "columns": ["message_id"],
       "tableTo": "messages",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -763,13 +753,9 @@
       "table": "attachments"
     },
     {
-      "columns": [
-        "ticket_id"
-      ],
+      "columns": ["ticket_id"],
       "tableTo": "tickets",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -778,13 +764,9 @@
       "table": "attachments"
     },
     {
-      "columns": [
-        "uploader_id"
-      ],
+      "columns": ["uploader_id"],
       "tableTo": "profiles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -793,13 +775,9 @@
       "table": "attachments"
     },
     {
-      "columns": [
-        "ticket_id"
-      ],
+      "columns": ["ticket_id"],
       "tableTo": "tickets",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -808,13 +786,9 @@
       "table": "messages"
     },
     {
-      "columns": [
-        "author_id"
-      ],
+      "columns": ["author_id"],
       "tableTo": "profiles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -823,13 +797,9 @@
       "table": "messages"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -838,13 +808,9 @@
       "table": "profiles"
     },
     {
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -853,13 +819,9 @@
       "table": "sessions"
     },
     {
-      "columns": [
-        "ticket_id"
-      ],
+      "columns": ["ticket_id"],
       "tableTo": "tickets",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -868,13 +830,9 @@
       "table": "ticket_events"
     },
     {
-      "columns": [
-        "actor_id"
-      ],
+      "columns": ["actor_id"],
       "tableTo": "profiles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -883,13 +841,9 @@
       "table": "ticket_events"
     },
     {
-      "columns": [
-        "customer_id"
-      ],
+      "columns": ["customer_id"],
       "tableTo": "profiles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -898,13 +852,9 @@
       "table": "tickets"
     },
     {
-      "columns": [
-        "agent_id"
-      ],
+      "columns": ["agent_id"],
       "tableTo": "profiles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -913,81 +863,63 @@
       "table": "tickets"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "accounts_pk",
       "table": "accounts",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "attachments_pk",
       "table": "attachments",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "messages_pk",
       "table": "messages",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "profiles_pk",
       "table": "profiles",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "sessions_pk",
       "table": "sessions",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "ticket_events_pk",
       "table": "ticket_events",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "tickets_pk",
       "table": "tickets",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pk",
       "table": "users",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "verifications_pk",
       "table": "verifications",
@@ -1164,18 +1096,14 @@
       "table": "verifications"
     },
     {
-      "columns": [
-        "token"
-      ],
+      "columns": ["token"],
       "nameExplicit": false,
       "name": "sessions_token_unique",
       "entityType": "uniques",
       "table": "sessions"
     },
     {
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nameExplicit": false,
       "name": "users_email_unique",
       "entityType": "uniques",

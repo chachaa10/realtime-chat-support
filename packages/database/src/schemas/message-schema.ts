@@ -16,7 +16,5 @@ export const messages = sqliteTable(
     body: text('body').notNull(),
     createdAt: integer('created_at').notNull(),
   },
-  (table) => [
-    index('idx_messages_ticket_created').on(table.ticketId, table.createdAt),
-  ],
+  (table) => [index('idx_messages_ticket_created').on(table.ticketId, table.createdAt)],
 );

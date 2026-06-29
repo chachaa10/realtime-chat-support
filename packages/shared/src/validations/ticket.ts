@@ -1,14 +1,19 @@
 import { z } from 'zod';
 
-export const TicketStatus = z.enum(
-  ['open', 'in_progress', 'resolved', 'cancelled'],
-  { error: 'Status must be one of: open, in_progress, resolved, cancelled' },
-);
+export const TicketStatus = z.enum(['open', 'in_progress', 'resolved', 'cancelled'], {
+  error: 'Status must be one of: open, in_progress, resolved, cancelled',
+});
 
 export const TicketSchema = z.object({
   id: z.number(),
-  subject: z.string().min(1, { error: 'Subject is required' }).max(200, { error: 'Subject must be at most 200 characters' }),
-  description: z.string().min(1, { error: 'Description is required' }).max(5000, { error: 'Description must be at most 5000 characters' }),
+  subject: z
+    .string()
+    .min(1, { error: 'Subject is required' })
+    .max(200, { error: 'Subject must be at most 200 characters' }),
+  description: z
+    .string()
+    .min(1, { error: 'Description is required' })
+    .max(5000, { error: 'Description must be at most 5000 characters' }),
   status: TicketStatus,
   customerId: z.string(),
   agentId: z.string().nullable(),
@@ -19,6 +24,12 @@ export const TicketSchema = z.object({
 });
 
 export const CreateTicketSchema = z.object({
-  subject: z.string().min(1, { error: 'Subject is required' }).max(200, { error: 'Subject must be at most 200 characters' }),
-  description: z.string().min(1, { error: 'Description is required' }).max(5000, { error: 'Description must be at most 5000 characters' }),
+  subject: z
+    .string()
+    .min(1, { error: 'Subject is required' })
+    .max(200, { error: 'Subject must be at most 200 characters' }),
+  description: z
+    .string()
+    .min(1, { error: 'Description is required' })
+    .max(5000, { error: 'Description must be at most 5000 characters' }),
 });
