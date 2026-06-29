@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 
-import { LoginSchema, RegisterSchema } from '../validations/auth';
-import { SendMessageSchema, MessageSchema } from '../validations/message';
-import { ProfileSchema } from '../validations/profile';
-import { CreateTicketSchema, TicketStatus } from '../validations/ticket';
+import { LoginSchema, RegisterSchema } from '../validations/auth-validation';
+import { SendMessageSchema, MessageSchema } from '../validations/message-validation';
+import { ProfileSchema } from '../validations/profile-validation';
+import { CreateTicketSchema, TicketStatus } from '../validations/ticket-validation';
 
 describe('LoginSchema', () => {
   it('accepts valid login', () => {

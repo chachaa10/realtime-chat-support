@@ -1,9 +1,9 @@
 export { env, envSchema } from './validations/env';
-export { ProfileSchema } from './validations/profile';
-export { LoginSchema, RegisterSchema } from './validations/auth';
-export { TicketSchema, CreateTicketSchema, TicketStatus } from './validations/ticket';
-export { MessageSchema, SendMessageSchema } from './validations/message';
-export { AttachmentSchema } from './validations/attachment';
+export { ProfileSchema } from './validations/profile-validation';
+export { LoginSchema, RegisterSchema } from './validations/auth-validation';
+export { TicketSchema, CreateTicketSchema, TicketStatus } from './validations/ticket-validation';
+export { MessageSchema, SendMessageSchema } from './validations/message-validation';
+export { AttachmentSchema } from './validations/attachment-validation';
 export type { Profile } from './types/profile';
 export type { LoginInput, RegisterInput } from './types/auth';
 export type { Ticket, TicketStatus as TicketStatusType, CreateTicketInput } from './types/ticket';
