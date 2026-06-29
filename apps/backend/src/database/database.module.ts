@@ -1,5 +1,4 @@
 import { Global, Module, type OnApplicationShutdown } from '@nestjs/common';
-
 import { db, client, type DbClient } from '@repo/database';
 
 export type { DbClient };

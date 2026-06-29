@@ -16,15 +16,15 @@ vi.mock('@repo/shared', () => {
   };
 });
 
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { db } from '@repo/database';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
 import request from 'supertest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 
-import { auth } from './auth';
 import { DatabaseModule } from '../database/database.module';
-import { db } from '@repo/database';
+import { auth } from './auth';
 
 let app: INestApplication;
 
@@ -90,9 +90,7 @@ describe('POST /api/auth/sign-up/email', () => {
   const user = { name: 'Alice', email: 'alice@test.com', password: 'password123' };
 
   it('creates user and returns token for valid credentials', async () => {
-    const res = await request(app.getHttpServer())
-      .post('/api/auth/sign-up/email')
-      .send(user);
+    const res = await request(app.getHttpServer()).post('/api/auth/sign-up/email').send(user);
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
@@ -106,9 +104,7 @@ describe('POST /api/auth/sign-up/email', () => {
   });
 
   it('rejects duplicate email', async () => {
-    const res = await request(app.getHttpServer())
-      .post('/api/auth/sign-up/email')
-      .send(user);
+    const res = await request(app.getHttpServer()).post('/api/auth/sign-up/email').send(user);
 
     expect(res.status).toBe(422);
   });
