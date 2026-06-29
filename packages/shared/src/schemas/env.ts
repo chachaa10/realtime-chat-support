@@ -2,11 +2,11 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   PORT: z.coerce.number(),
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   CORS_ORIGIN: z.string().min(1, 'CORS_ORIGIN is required'),
   BETTER_AUTH_SECRET: z.string().min(32, 'BETTER_AUTH_SECRET is required'),
   BETTER_AUTH_URL: z.url().min(1, 'BETTER_AUTH_URL is required'),
-  DB_FILE_NAME: z.string().min(1, 'DB_FILE_NAME is required'),
+  DATABASE_PATH: z.string().optional().default(':memory:'),
+  UPLOAD_DIR: z.string().optional().default('uploads'),
 });
 
 let _env: z.infer<typeof envSchema> | undefined;
@@ -18,7 +18,7 @@ let _env: z.infer<typeof envSchema> | undefined;
  * @example
  * ```ts
  * const port = env.PORT;
- * const databaseUrl = env.DATABASE_URL;
+ * const dbPath = env.DATABASE_PATH;
  * ```
  *
  * @throws {Error} If environment variables are invalid

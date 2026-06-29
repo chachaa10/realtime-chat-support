@@ -85,15 +85,8 @@ export const verifications = sqliteTable(
   (table) => [index('verifications_identifier_idx').on(table.identifier)],
 );
 
-export const profiles = sqliteTable('profiles', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  role: text('role', { enum: ['customer', 'agent'] }).notNull(),
-  createdAt: integer('created_at').notNull(),
-});
-
 export const relations = defineRelations(
-  { users, sessions, accounts, verifications, profiles },
+  { users, sessions, accounts, verifications },
   (r) => ({
     users: {
       sessions: r.many.sessions(),

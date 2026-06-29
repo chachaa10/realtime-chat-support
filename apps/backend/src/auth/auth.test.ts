@@ -7,11 +7,10 @@ vi.mock('@repo/shared', () => {
   return {
     env: {
       PORT: 3002,
-      DATABASE_URL: `file:${dbPath}`,
       CORS_ORIGIN: 'http://localhost:5173',
       BETTER_AUTH_SECRET: 'test-secret-that-is-at-least-thirty-two-chars!!',
       BETTER_AUTH_URL: 'http://localhost:3002',
-      DB_FILE_NAME: `file:${dbPath}`,
+      DATABASE_PATH: dbPath,
     },
   };
 });

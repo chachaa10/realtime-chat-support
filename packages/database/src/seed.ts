@@ -2,19 +2,19 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { faker } from '@faker-js/faker';
-import { createClient } from '@libsql/client';
 import { env } from '@repo/shared';
+import Database from 'better-sqlite3';
 import dotenv from 'dotenv';
-import { drizzle } from 'drizzle-orm/libsql';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 
-import { users, profiles } from './schema';
+import * as schema from './schema';
 
 const projectRoot = resolve(dirname(dirname(dirname(fileURLToPath(import.meta.url)))), '..');
 dotenv.config({ path: resolve(projectRoot, '.env') });
 
 async function seed() {
-  const client = createClient({ url: env.DB_FILE_NAME });
-  const db = drizzle({ client });
+  const client = new Database(env.DATABASE_PATH);
+  const db = drizzle({ client, schema });
 
   console.log('Seeding database...');
 
@@ -54,9 +54,9 @@ async function seed() {
 
   const agentIds = new Set(agents.map((u) => u.id));
   const allUsers = [...agents, ...customers];
-  await db.insert(users).values(allUsers);
+  await db.insert(schema.users).values(allUsers);
 
-  await db.insert(profiles).values(
+  await db.insert(schema.profiles).values(
     allUsers.map((u) => ({
       id: u.id,
       name: u.name,

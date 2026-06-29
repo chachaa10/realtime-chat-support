@@ -44,30 +44,14 @@ packages/database   │
 
 ### Week 1: Foundation
 
-**Infrastructure**
-
-- Setup oxlint + oxfmt at root with `.oxlintrc.json` + `.oxfmtrc.json`
-- Create `turbo.json` at root with `tasks`: `build` (`dependsOn: ["^build"]`), `test` (`dependsOn: ["^build"]`), `typecheck` (`dependsOn: ["^build"]`). Configure `outputs: ["dist/**"]` on build for cache-awareness even if not used yet.
-- Root scripts become one-liner pass-throughs: `"build": "turbo build"`, `"test": "turbo test"`, `"typecheck": "turbo typecheck"`. `lint`, `fmt`, `fmt:check` run directly (no turbo).
-- Backend is source-direct in development (`tsx src/main.ts` — tsx compiles TS on the fly). CI runs `tsdown src/main.ts --outDir dist` to verify compilation.
-- Frontend builds via `vite build` into `dist/`
-- `typecheck` runs per-workspace via turbo: `packages/shared`, `packages/database`, `apps/backend`, `apps/frontend`
-- Create `.github/workflows/ci.yml` — parallel jobs
-
 **Backend**
 
-- **SPIKE: Validate NestJS on Node.js + better-sqlite3 + Drizzle ORM.** Scaffold minimal NestJS app with one controller, one guard, one Socket.io gateway, one Drizzle query. Integrate better-auth server adapter (validate session creation, JWT issuance, JWT verification in a guard). Verify `better-sqlite3` WAL mode, `busyTimeout`, `PRAGMA foreign_keys = ON`, and checkpoint on `db.close()`. Budget: 1 day. If any piece fails → document and fix.
-- Create `apps/backend/src/env.ts` — Zod schema parsing `process.env`, exit on invalid
 - Create Drizzle schema at `packages/database/src/schema.ts` — tables: `profiles`, `tickets`, `messages`, `attachments`. No `users` table. Composite index `(ticketId, createdAt)` on messages. Composite index `(messageId, createdAt)` on attachments for orphan cleanup.
-- Create `packages/database/src/client.ts` — `createClient(path: string): DrizzleClient` factory. Configure `busyTimeout: 5000` and run `PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;` on open.
-- Create `packages/database/src/migrate.ts` — wraps `drizzle-kit generate` SQL runner
-- Create `apps/backend/src/database/database.module.ts` — thin NestJS module wrapping `createClient` from `@repo/database`
 - Define typed error hierarchy: `AppError` (base), `NotFoundError`, `ForbiddenError`, `ValidationError`, `ConflictError` in `apps/backend/src/common/errors/`. Add `ErrorCode` enum: `'NOT_FOUND' | 'FORBIDDEN' | 'VALIDATION_ERROR' | 'CONFLICT' | 'INTERNAL_ERROR' | 'RATE_LIMITED'`.
 - Create global `AppExceptionFilter` catching all `AppError` subclasses + `Error` fallback (returns 500 `INTERNAL_ERROR`). Log every caught error with request path and correlation ID.
 - Create `WsExceptionFilter` (extends `BaseWsExceptionFilter`) for WS gateway errors. Standardized error shape across HTTP and WS: `{ code: string, message: string, errors?: Record<string, string[]> }`.
 - **Graceful shutdown**: `app.enableShutdownHooks()`, drain Socket.io (`server.close()`), close SQLite via `db.close()`. Handle SIGTERM/SIGINT. Run `PRAGMA wal_checkpoint(TRUNCATE)` before close.
 - **Security hardening**: `app.use(helmet())` for security headers. `app.useBodyParser('json', { limit: '1mb' })` to prevent OOM. Add global `X-Correlation-ID` middleware (accept incoming or generate `crypto.randomUUID()`).
-- **Migration execution**: Run `packages/database/src/migrate.ts` synchronously before `app.listen()` in `main.ts` — not in a background promise or setTimeout.
 - Define `FileStorage` interface (port) in `apps/backend/src/common/`: `{ save(filename, stream): Promise<FileRef>; read(filePath): Promise<Stream>; delete(filePath): Promise<void> }`. Implement `LocalFileStorage` adapter for `uploads/`.
 - Define API response contract:
   - Success: `{ data: T }`
@@ -78,11 +62,10 @@ packages/database   │
   - `rateLimit: { enabled: true, window: 60, max: 5 }` for auth endpoints
   - `customRules: { "/sign-in/email": { window: 60, max: 5 }, "/sign-up/email": { window: 60, max: 3 } }`
 - Registration flow: create profile row first (with `id` as placeholder or generated), then create better-auth internal user. If better-auth fails, delete the profile row. If better-auth succeeds, update profile with real better-auth user ID.
-- JWT guard: verifies token via better-auth, fetches profile for role
 
 **Frontend**
 
-- Scaffold Vite + TanStack Router + shadcn
+- Scaffold Vite + TanStack Router + Tanstack Query + shadcn + zod
 - Login/register pages
 - Auth context (store JWT, auto-attach to fetch)
 - Route guards (redirect to login if unauthenticated)
@@ -94,13 +77,10 @@ packages/database   │
 **Testing**
 
 - Setup vitest configs per workspace (`vitest.config.ts` at `apps/backend`, `apps/frontend`, `packages/database`)
-- Create backend test helpers (`apps/backend/src/__tests__/helpers/factories.ts` + `mocks.ts`)
-- Add in-memory SQLite integration test setup in backend vitest config
-- Create `@repo/database` smoke test: open `:memory:`, run migrate, verify all tables exist
-- Write initial backend service tests
+- Create backend test helpers 
 - Write Zod schema validation tests in `packages/shared`
 
-**Verify:** Can register, login, and see a protected page. Migrations run from scratch without error. `busyTimeout` and `foreign_keys` are active on the connection. Helmet headers present on API responses.
+**Verify:** Can register, login, and see a protected page. Helmet headers present on API responses.
 
 ### Week 2: Auth + Tickets (Full Stack)
 

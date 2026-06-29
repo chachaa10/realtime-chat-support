@@ -1,7 +1,5 @@
 import { Global, Module, type OnApplicationShutdown } from '@nestjs/common';
-import { db, client, type DbClient } from '@repo/database';
-
-export type { DbClient };
+import { createClient } from '@repo/database';
 
 export const DB_PROVIDER = 'DB_PROVIDER';
 
@@ -10,13 +8,16 @@ export const DB_PROVIDER = 'DB_PROVIDER';
   providers: [
     {
       provide: DB_PROVIDER,
-      useFactory: () => db,
+      useFactory: () => {
+        const url = process.env.DATABASE_PATH ?? ':memory:';
+        return createClient(url);
+      },
     },
   ],
   exports: [DB_PROVIDER],
 })
 export class DatabaseModule implements OnApplicationShutdown {
   onApplicationShutdown() {
-    client?.close();
+    // Close handled in main.ts
   }
 }

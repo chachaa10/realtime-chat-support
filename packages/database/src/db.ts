@@ -1,9 +1,10 @@
-import { createClient } from '@libsql/client';
-import { env } from '@repo/shared';
-import { drizzle } from 'drizzle-orm/libsql';
+import DatabaseConstructor from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 
 import * as schema from './schema';
 
-export const client = createClient({ url: env.DB_FILE_NAME });
+const dbPath = process.env.DATABASE_PATH ?? ':memory:';
+export const client = new DatabaseConstructor(dbPath);
+client.pragma('journal_mode = WAL');
 export const db = drizzle({ client, schema });
 export type DbClient = typeof db;

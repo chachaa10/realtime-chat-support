@@ -5,7 +5,7 @@ export default defineConfig({
   out: './src/migrations',
   dialect: 'sqlite',
   dbCredentials: {
-    url: 'file:../../data.db',
+    url: '../../data.db',
   },
   strict: true,
   verbose: true,
