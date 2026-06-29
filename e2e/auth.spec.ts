@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 import { loginUser, registerUser, uniqueEmail } from './helpers';
 
-const PASSWORD = 'password123';
+const PASSWORD = 'Password123';
 
 test.describe('Register', () => {
   test('happy path: register a customer and redirect to /tickets', async ({
@@ -23,7 +23,7 @@ test.describe('Register', () => {
     await page.fill('input[placeholder="Password"]', PASSWORD);
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('text=expected string to have >=1 characters')).toBeVisible();
+    await expect(page.locator('text=Name is required')).toBeVisible();
     await expect(page).toHaveURL('/register');
   });
 
@@ -34,7 +34,7 @@ test.describe('Register', () => {
     await page.fill('input[placeholder="Password"]', PASSWORD);
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('text=Invalid email address')).toBeVisible();
+    await expect(page.locator('text=Invalid email format')).toBeVisible();
     await expect(page).toHaveURL('/register');
   });
 
@@ -47,7 +47,7 @@ test.describe('Register', () => {
     await page.click('button[type="submit"]');
 
     await expect(
-      page.locator('text=expected string to have >=8 characters'),
+      page.locator('text=Password must be at least 8 characters'),
     ).toBeVisible();
     await expect(page).toHaveURL('/register');
   });
@@ -110,7 +110,7 @@ test.describe('Login', () => {
     await page.fill('input[placeholder="Password"]', PASSWORD);
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('text=Invalid email address')).toBeVisible();
+    await expect(page.locator('text=Invalid email format')).toBeVisible();
     await expect(page).toHaveURL('/login');
   });
 });
