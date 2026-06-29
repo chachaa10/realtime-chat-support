@@ -9,6 +9,7 @@
     "lint:fix": "oxlint --fix apps packages",
     "format": "oxfmt --check apps packages",
     "format:fix": "oxfmt --write apps packages",
+    "ci:check": "oxlint apps packages && oxfmt --check apps packages && turbo typecheck && turbo test && turbo build",
     "test": "turbo test",
     "test:watch": "turbo run test:watch --parallel",
     "test:backend": "pnpm --filter backend test",
