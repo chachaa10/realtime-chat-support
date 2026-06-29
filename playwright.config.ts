@@ -14,7 +14,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        'PORT=3099 TEST_DATABASE_PATH=$(pwd)/test-e2e.db NODE_ENV=test pnpm --filter backend dev',
+        'PORT=3099 CORS_ORIGIN=http://localhost:5173 BETTER_AUTH_SECRET=18AwKC4Qx2pBE3g1PEfrgdExiZnPuIfM BETTER_AUTH_URL=http://localhost:3099 TEST_DATABASE_PATH=$(pwd)/test-e2e.db NODE_ENV=test pnpm --filter backend dev',
       port: 3099,
       reuseExistingServer: false,
       timeout: 20000,
