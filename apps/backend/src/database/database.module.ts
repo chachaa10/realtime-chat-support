@@ -9,7 +9,7 @@ export const DB_PROVIDER = 'DB_PROVIDER';
     {
       provide: DB_PROVIDER,
       useFactory: () => {
-        const url = process.env.DATABASE_PATH ?? ':memory:';
+        const url = process.env.TEST_DATABASE_PATH ?? process.env.DATABASE_PATH ?? ':memory:';
         return createClient(url);
       },
     },

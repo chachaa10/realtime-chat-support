@@ -18,6 +18,6 @@ export function closeDb(db: BetterSQLite3Database): void {
   client.close();
 }
 
-const defaultPath = process.env.DATABASE_PATH ?? ':memory:';
+const defaultPath = process.env.TEST_DATABASE_PATH ?? process.env.DATABASE_PATH ?? ':memory:';
 export const db = createClient(defaultPath);
 export type DbClient = BetterSQLite3Database<typeof schema>;

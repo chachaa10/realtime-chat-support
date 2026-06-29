@@ -1,0 +1,29 @@
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  timeout: 10000,
+  retries: 0,
+  fullyParallel: true,
+  workers: 2,
+  use: {
+    baseURL: 'http://localhost:5173',
+    headless: true,
+    actionTimeout: 5000,
+  },
+  webServer: [
+    {
+      command:
+        'PORT=3099 TEST_DATABASE_PATH=$(pwd)/test-e2e.db NODE_ENV=test pnpm --filter backend dev',
+      port: 3099,
+      reuseExistingServer: false,
+      timeout: 20000,
+    },
+    {
+      command: 'VITE_API_URL=http://localhost:3099 pnpm --filter frontend dev',
+      port: 5173,
+      reuseExistingServer: false,
+      timeout: 20000,
+    },
+  ],
+});

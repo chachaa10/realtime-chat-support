@@ -31,17 +31,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const data = await loginApi(email, password);
+    const prev = localStorage.getItem('user');
+    const prevUser = prev ? JSON.parse(prev) : {};
+    const userWithRole = { ...data.user, role: prevUser.role ?? 'customer' };
     localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setUser(data.user);
+    localStorage.setItem('user', JSON.stringify(userWithRole));
+    setUser(userWithRole);
   }, []);
 
   const register = useCallback(
     async (name: string, email: string, password: string, role: 'customer' | 'agent') => {
       const data = await registerApi(name, email, password, role);
+      const userWithRole = { ...data.user, role };
       localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(userWithRole));
+      setUser(userWithRole);
     },
     [],
   );

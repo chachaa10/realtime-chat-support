@@ -11,13 +11,16 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  rateLimit: {
-    enabled: true,
-    window: 60,
-    max: 5,
-    customRules: {
-      '/sign-in/email': { window: 60, max: 5 },
-      '/sign-up/email': { window: 60, max: 3 },
-    },
-  },
+  rateLimit:
+    process.env.NODE_ENV === 'test'
+      ? { enabled: false }
+      : {
+          enabled: true,
+          window: 60,
+          max: 5,
+          customRules: {
+            '/sign-in/email': { window: 60, max: 5 },
+            '/sign-up/email': { window: 60, max: 3 },
+          },
+        },
 });

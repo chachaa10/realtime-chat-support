@@ -1,10 +1,12 @@
 import { RegisterSchema } from '@repo/shared';
+import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { useAuth } from '../context';
 
 export function RegisterForm() {
   const { register } = useAuth();
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +25,7 @@ export function RegisterForm() {
 
     try {
       await register(name, email, password, role);
+      navigate({ to: '/' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     }
@@ -36,21 +39,18 @@ export function RegisterForm() {
         placeholder="Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        required
       />
       <input
-        type="email"
+        type="text"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        required
       />
       <input
         type="password"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        required
       />
       <select value={role} onChange={(e) => setRole(e.target.value as 'customer' | 'agent')}>
         <option value="customer">Customer</option>

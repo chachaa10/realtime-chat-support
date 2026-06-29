@@ -19,6 +19,8 @@
     "test:database:watch": "pnpm --filter @repo/database test:watch",
     "test:frontend": "pnpm --filter frontend test",
     "test:frontend:watch": "pnpm --filter frontend test:watch",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "ci:check": "pnpm lint && pnpm format && pnpm build && pnpm typecheck && pnpm test",
     "clean": "pnpm --filter backend exec rm -rf dist .cache && pnpm --filter frontend exec rm -rf dist .cache && pnpm --filter @repo/shared exec rm -rf dist .cache && pnpm --filter @repo/database exec rm -rf dist .cache",
     "setup": "pnpm install && turbo build && pnpm db:push",
@@ -52,6 +54,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^11.1.27",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.3.1",
     "@thallesp/nestjs-better-auth": "^2.6.1",
     "@types/express": "^5.0.6",
@@ -72,7 +75,8 @@
     "turbo": "^2.10.0",
     "typescript": "^6.0.3",
     "vite": "^8.1.0",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "wait-on": "^9.0.10"
   },
   "engines": {
     "node": ">=20.0.0"
