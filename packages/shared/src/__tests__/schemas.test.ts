@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 
-import { SendMessageSchema, MessageSchema } from '../schemas/message';
-import { CreateTicketSchema, TicketStatus } from '../schemas/ticket';
-import { LoginSchema, RegisterSchema, UserSchema } from '../schemas/user';
+import { SendMessageSchema, MessageSchema } from '../validations/message';
+import { CreateTicketSchema, TicketStatus } from '../validations/ticket';
+import { ProfileSchema } from '../validations/profile';
+import { LoginSchema, RegisterSchema } from '../validations/auth';
 
 describe('LoginSchema', () => {
   it('accepts valid login', () => {
@@ -30,7 +31,7 @@ describe('RegisterSchema', () => {
       RegisterSchema.safeParse({
         name: 'Test',
         email: 'test@example.com',
-        password: 'password123',
+        password: 'Password123',
         role: 'customer',
       }).success,
     ).toBe(true);
@@ -58,10 +59,10 @@ describe('RegisterSchema', () => {
   });
 });
 
-describe('UserSchema', () => {
-  it('accepts valid user', () => {
+describe('ProfileSchema', () => {
+  it('accepts valid profile', () => {
     expect(
-      UserSchema.safeParse({ id: '1', name: 'Test', role: 'agent', createdAt: 1000 }).success,
+      ProfileSchema.safeParse({ id: '1', role: 'agent', createdAt: 1000 }).success,
     ).toBe(true);
   });
 });

@@ -1,3 +1,6 @@
-import type { Message, Attachment } from '../schemas/message';
+import type { z } from 'zod';
 
-export type { Message, Attachment };
+import type { MessageSchema, SendMessageSchema } from '../validations/message';
+
+export type Message = z.infer<typeof MessageSchema>;
+export type SendMessageInput = z.infer<typeof SendMessageSchema>;
