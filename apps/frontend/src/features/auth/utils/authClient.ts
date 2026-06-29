@@ -1,6 +1,7 @@
-const API_BASE = typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL
-  ? import.meta.env.VITE_API_URL
-  : 'http://localhost:3001';
+const API_BASE =
+  typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL
+    ? import.meta.env.VITE_API_URL
+    : 'http://localhost:3001';
 
 export async function fetchApi(path: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');

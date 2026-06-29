@@ -1,8 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { profiles } from '@repo/database';
+import { type DbClient } from '@repo/database';
 import { DatabaseHook, AfterCreate } from '@thallesp/nestjs-better-auth';
 
-import { DB_PROVIDER, type DbClient } from '../database/database.module';
+import { DB_PROVIDER } from '../database/database.module';
 
 @DatabaseHook()
 @Injectable()

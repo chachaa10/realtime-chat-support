@@ -21,6 +21,7 @@
     "db:migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
+    "@repo/shared": "workspace:*",
     "better-sqlite3": "^12.11.1",
     "drizzle-orm": "1.0.0-rc.4-5d5b77c"
   },

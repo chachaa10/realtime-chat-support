@@ -31,9 +31,6 @@ export function ApiError(
   return { error: { code, message, ...(errors ? { errors } : {}) } };
 }
 
-export function ApiPaginated<T>(
-  data: T[],
-  cursor: number | null,
-): ApiPaginatedResponse<T> {
+export function ApiPaginated<T>(data: T[], cursor: number | null): ApiPaginatedResponse<T> {
   return { data, meta: { cursor } };
 }

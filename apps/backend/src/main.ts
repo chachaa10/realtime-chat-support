@@ -1,14 +1,16 @@
 import './env';
 import 'reflect-metadata';
 import crypto from 'node:crypto';
+
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { closeDb, db } from '@repo/database';
+import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module';
-import { env } from './env';
 import { AppExceptionFilter } from './common/app-exception-filter';
-import { closeDb, db } from '@repo/database';
+import { env } from './env';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -24,10 +26,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.use((req, res, next) => {
-    const correlationId =
-      (req.headers['x-correlation-id'] as string) ?? crypto.randomUUID();
-    req.correlationId = correlationId;
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const correlationId = (req.headers['x-correlation-id'] as string) ?? crypto.randomUUID();
+    (req as any).correlationId = correlationId;
     res.setHeader('X-Correlation-ID', correlationId);
     next();
   });

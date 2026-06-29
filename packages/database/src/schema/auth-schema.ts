@@ -85,24 +85,21 @@ export const verifications = sqliteTable(
   (table) => [index('verifications_identifier_idx').on(table.identifier)],
 );
 
-export const relations = defineRelations(
-  { users, sessions, accounts, verifications },
-  (r) => ({
-    users: {
-      sessions: r.many.sessions(),
-      accounts: r.many.accounts(),
-    },
-    sessions: {
-      user: r.one.users({
-        from: r.sessions.userId,
-        to: r.users.id,
-      }),
-    },
-    accounts: {
-      user: r.one.users({
-        from: r.accounts.userId,
-        to: r.users.id,
-      }),
-    },
-  }),
-);
+export const relations = defineRelations({ users, sessions, accounts, verifications }, (r) => ({
+  users: {
+    sessions: r.many.sessions(),
+    accounts: r.many.accounts(),
+  },
+  sessions: {
+    user: r.one.users({
+      from: r.sessions.userId,
+      to: r.users.id,
+    }),
+  },
+  accounts: {
+    user: r.one.users({
+      from: r.accounts.userId,
+      to: r.users.id,
+    }),
+  },
+}));

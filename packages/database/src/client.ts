@@ -12,7 +12,7 @@ export function createClient(dbPath?: string) {
   return db;
 }
 
-export function closeDb(db: BetterSQLite3Database): void {
+export function closeDb<T extends Record<string, unknown>>(db: BetterSQLite3Database<T>): void {
   const client = (db as any)['$client'] as DatabaseConstructor.Database;
   client.exec('PRAGMA wal_checkpoint(TRUNCATE)');
   client.close();

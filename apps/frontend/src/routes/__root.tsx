@@ -5,11 +5,7 @@ import { useAuth } from '../features/auth/context';
 export const rootRoute = createRootRoute({
   beforeLoad: ({ location }) => {
     const token = localStorage.getItem('token');
-    if (
-      !token &&
-      location.pathname !== '/login' &&
-      location.pathname !== '/register'
-    ) {
+    if (!token && location.pathname !== '/login' && location.pathname !== '/register') {
       throw redirect({ to: '/login' });
     }
   },
