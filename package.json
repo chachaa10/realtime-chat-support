@@ -22,6 +22,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "ci:check": "pnpm lint && pnpm format && pnpm build && pnpm typecheck && pnpm test",
+    "ci:full": "pnpm ci:check && pnpm test:e2e",
     "clean": "pnpm --filter backend exec rm -rf dist .cache && pnpm --filter frontend exec rm -rf dist .cache && pnpm --filter @repo/shared exec rm -rf dist .cache && pnpm --filter @repo/database exec rm -rf dist .cache",
     "setup": "pnpm install && turbo build && pnpm db:push",
     "dev:backend": "pnpm --filter backend dev",
@@ -32,7 +33,6 @@
     "db:reset": "rm -f data.db && pnpm --filter @repo/database exec drizzle-kit push",
     "db:seed": "pnpm --filter @repo/shared build && pnpm --filter @repo/database exec tsx src/seed.ts",
     "db:studio": "pnpm --filter @repo/database exec drizzle-kit studio",
-    "prepare": "husky",
     "prepare": "husky"
   },
   "dependencies": {
