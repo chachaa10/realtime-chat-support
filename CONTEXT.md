@@ -9,7 +9,7 @@ A container for a customer issue request. Holds metadata (subject, status, assig
 _Avoid_: Issue, case, conversation
 
 **Message**:
-A single unit of communication within a ticket's conversation. Belongs to exactly one ticket and one author.
+A single unit of communication within a ticket's conversation. Belongs to exactly one ticket and one author. Immutable once sent.
 _Avoid_: Post, reply, comment
 
 **Conversation**:
@@ -27,5 +27,8 @@ _Avoid_: Staff, support rep, operator
 Either a Customer or an Agent. The base identity handled by better-auth. Role discriminator: `customer | agent`.
 
 **Ticket Status**:
-One of: `Open` (submitted, awaiting agent), `In Progress` (agent accepted), `Resolved` (agent marked done).
+One of: `Open` (submitted, awaiting agent), `In Progress` (agent accepted), `Resolved` (agent marked done), `Cancelled` (customer withdrew while ticket was still Open).
 _Avoid_: Closed, Pending, Awaiting Customer
+
+**Ticket Event**:
+An audit record of a status transition on a ticket. Logs the from/to states, who triggered it, and when. Created for every status change including ticket creation.
