@@ -28,10 +28,6 @@
 @repo/shared ──► backend
 ```
 
-## CI
-
-- Parallel jobs: lint, `turbo typecheck`, `turbo test`, `turbo build` + `pnpm audit --prod`.
-
 ## Reference
 
 | Tool            | Docs                         |
