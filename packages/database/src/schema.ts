@@ -1,76 +1,139 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+import { defineRelations } from 'drizzle-orm';
 
-export { users, sessions, accounts, verifications, relations } from './schema/auth-schema';
+import {
+  users,
+  sessions,
+  accounts,
+  verifications,
+} from './schemas/auth-schema';
+import { profiles } from './schemas/profile-schema';
+import { tickets } from './schemas/ticket-schema';
+import { messages } from './schemas/message-schema';
+import { attachments } from './schemas/attachment-schema';
+import { ticketEvents } from './schemas/ticket-event-schema';
 
-export const profiles = sqliteTable('profiles', {
-  id: text('id').primaryKey(), // matches better-auth's internal user ID
-  name: text('name').notNull(),
-  role: text('role', { enum: ['customer', 'agent'] }).notNull(),
-  createdAt: integer('created_at').notNull(), // Unix millis
-});
+export {
+  users,
+  sessions,
+  accounts,
+  verifications,
+  profiles,
+  tickets,
+  messages,
+  attachments,
+  ticketEvents,
+};
 
-export const tickets = sqliteTable(
-  'tickets',
+export const relations = defineRelations(
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    subject: text('subject').notNull(),
-    description: text('description').notNull(),
-    status: text('status', { enum: ['open', 'in_progress', 'resolved'] })
-      .notNull()
-      .default('open'),
-    customerId: text('customer_id')
-      .notNull()
-      .references(() => profiles.id),
-    agentId: text('agent_id').references(() => profiles.id),
-    createdAt: integer('created_at').notNull(), // Unix millis
-    updatedAt: integer('updated_at').notNull(), // Unix millis, set =createdAt on insert
-    resolvedAt: integer('resolved_at'), // Unix millis, nullable
+    users,
+    sessions,
+    accounts,
+    verifications,
+    profiles,
+    tickets,
+    messages,
+    attachments,
+    ticketEvents,
   },
-  (table) => ({
-    statusIdx: index('idx_tickets_status_created').on(table.status, table.createdAt),
-    customerIdx: index('idx_tickets_customer').on(table.customerId),
-    agentIdx: index('idx_tickets_agent').on(table.agentId),
-  }),
-);
-
-export const messages = sqliteTable(
-  'messages',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    ticketId: integer('ticket_id')
-      .notNull()
-      .references(() => tickets.id),
-    authorId: text('author_id')
-      .notNull()
-      .references(() => profiles.id),
-    body: text('body').notNull(),
-    createdAt: integer('created_at').notNull(), // Unix millis
-  },
-  (table) => ({
-    ticketIdx: index('idx_messages_ticket').on(table.ticketId),
-  }),
-);
-
-export const attachments = sqliteTable(
-  'attachments',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    messageId: integer('message_id').references(() => messages.id),
-    ticketId: integer('ticket_id')
-      .notNull()
-      .references(() => tickets.id),
-    uploaderId: text('uploader_id')
-      .notNull()
-      .references(() => profiles.id),
-    fileName: text('file_name').notNull(),
-    fileSize: integer('file_size').notNull(),
-    mimeType: text('mime_type').notNull(),
-    filePath: text('file_path').notNull(),
-    createdAt: integer('created_at').notNull(), // Unix millis
-  },
-  (table) => ({
-    ticketIdx: index('idx_attachments_ticket').on(table.ticketId),
-    messageIdx: index('idx_attachments_message').on(table.messageId),
-    uploaderIdx: index('idx_attachments_uploader').on(table.uploaderId),
+  (r) => ({
+    users: {
+      sessions: r.many.sessions(),
+      accounts: r.many.accounts(),
+    },
+    sessions: {
+      user: r.one.users({
+        from: r.sessions.userId,
+        to: r.users.id,
+      }),
+    },
+    accounts: {
+      user: r.one.users({
+        from: r.accounts.userId,
+        to: r.users.id,
+      }),
+    },
+    profiles: {
+      ticketsAsCustomer: r.many.tickets({
+        from: r.profiles.id,
+        to: r.tickets.customerId,
+      }),
+      ticketsAsAgent: r.many.tickets({
+        from: r.profiles.id,
+        to: r.tickets.agentId,
+      }),
+      messages: r.many.messages({
+        from: r.profiles.id,
+        to: r.messages.authorId,
+      }),
+      attachments: r.many.attachments({
+        from: r.profiles.id,
+        to: r.attachments.uploaderId,
+      }),
+      ticketEvents: r.many.ticketEvents({
+        from: r.profiles.id,
+        to: r.ticketEvents.actorId,
+      }),
+    },
+    tickets: {
+      customer: r.one.profiles({
+        from: r.tickets.customerId,
+        to: r.profiles.id,
+      }),
+      agent: r.one.profiles({
+        from: r.tickets.agentId,
+        to: r.profiles.id,
+      }),
+      messages: r.many.messages({
+        from: r.tickets.id,
+        to: r.messages.ticketId,
+      }),
+      attachments: r.many.attachments({
+        from: r.tickets.id,
+        to: r.attachments.ticketId,
+      }),
+      events: r.many.ticketEvents({
+        from: r.tickets.id,
+        to: r.ticketEvents.ticketId,
+      }),
+    },
+    messages: {
+      ticket: r.one.tickets({
+        from: r.messages.ticketId,
+        to: r.tickets.id,
+      }),
+      author: r.one.profiles({
+        from: r.messages.authorId,
+        to: r.profiles.id,
+      }),
+      attachments: r.many.attachments({
+        from: r.messages.id,
+        to: r.attachments.messageId,
+      }),
+    },
+    attachments: {
+      ticket: r.one.tickets({
+        from: r.attachments.ticketId,
+        to: r.tickets.id,
+      }),
+      message: r.one.messages({
+        from: r.attachments.messageId,
+        to: r.messages.id,
+      }),
+      uploader: r.one.profiles({
+        from: r.attachments.uploaderId,
+        to: r.profiles.id,
+      }),
+    },
+    ticketEvents: {
+      ticket: r.one.tickets({
+        from: r.ticketEvents.ticketId,
+        to: r.tickets.id,
+      }),
+      actor: r.one.profiles({
+        from: r.ticketEvents.actorId,
+        to: r.profiles.id,
+      }),
+    },
   }),
 );
