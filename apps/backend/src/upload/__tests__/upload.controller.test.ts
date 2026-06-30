@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -23,9 +23,7 @@ vi.mock('@repo/shared', async (importOriginal) => {
   }
 })
 
-import { sql } from 'drizzle-orm'
-import type { INestApplication } from '@nestjs/common'
-import type { ExecutionContext } from '@nestjs/common'
+import type { INestApplication, ExecutionContext } from '@nestjs/common'
 import type { Request } from 'express'
 import { Test } from '@nestjs/testing'
 import { db, tickets } from '@repo/database'
@@ -111,7 +109,7 @@ describe('UploadController', () => {
     rmSync(uploadDir, { recursive: true, force: true })
     const dbPath = process.env.DATABASE_PATH
     if (dbPath && dbPath !== ':memory:') {
-      try { unlinkSync(dbPath) } catch { /* ignore */ }
+      try { rmSync(dbPath) } catch { /* ignore */ }
     }
   })
 

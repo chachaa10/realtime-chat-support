@@ -16,8 +16,6 @@ const ALLOWED_MIME_TYPES = new Set([
   'text/csv',
 ])
 
-const SCANNED_SIZE = 4100 // bytes to read for magic byte detection
-
 // checks magic bytes against known signatures
 const MAGIC_SIGNATURES: Array<{ mime: string; bytes: number[]; offset?: number }> = [
   { mime: 'image/png', bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] },

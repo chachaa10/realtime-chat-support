@@ -17,13 +17,13 @@ export function uploadFileWithProgress(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
 
-    xhr.upload.onprogress = (e) => {
+    xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable) {
         onProgress(Math.round((e.loaded / e.total) * 100))
       }
-    }
+    })
 
-    xhr.onload = () => {
+    xhr.addEventListener('load', () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         const body = JSON.parse(xhr.responseText)
         resolve(body.data as Attachment)
@@ -35,9 +35,9 @@ export function uploadFileWithProgress(
           reject(new Error('Upload failed'))
         }
       }
-    }
+    })
 
-    xhr.onerror = () => reject(new Error('Network error during upload'))
+    xhr.addEventListener('error', () => reject(new Error('Network error during upload')))
 
     const fd = new FormData()
     fd.append('file', file)

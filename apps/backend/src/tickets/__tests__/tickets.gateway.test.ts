@@ -208,10 +208,10 @@ describe('TicketsGateway', () => {
       (client as any).role = 'customer';
       client.emit = vi.fn();
 
-      const gateway = new TicketsGateway();
-      gateway.server = { to: vi.fn(() => ({ emit: vi.fn() })) } as any;
+      const gw = new TicketsGateway();
+      gw.server = { to: vi.fn(() => ({ emit: vi.fn() })) } as any;
 
-      gateway.handleReconnectSync(client, { ticketId: 1, lastMessageTimestamp: 1000 });
+      gw.handleReconnectSync(client, { ticketId: 1, lastMessageTimestamp: 1000 });
 
       expect(client.emit).toHaveBeenCalledWith('reconnect:sync', {
         messages: [{ id: 2, ticketId: 1, authorId: 'agent-1', body: 'Missed message', createdAt: 2000 }],
@@ -228,8 +228,8 @@ describe('TicketsGateway', () => {
       (client as any).role = 'customer';
       client.emit = vi.fn();
 
-      const gateway = new TicketsGateway();
-      gateway.handleReconnectSync(client, { ticketId: 1, lastMessageTimestamp: 1000 });
+      const gw = new TicketsGateway();
+      gw.handleReconnectSync(client, { ticketId: 1, lastMessageTimestamp: 1000 });
 
       expect(client.emit).not.toHaveBeenCalled();
     });

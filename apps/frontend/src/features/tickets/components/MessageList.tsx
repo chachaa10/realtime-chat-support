@@ -1,16 +1,17 @@
 import { useRef, useEffect } from 'react'
-import type { Message } from '@repo/shared'
 
 import { useAuth } from '@/features/auth/context'
+import type { MessageWithAttachments } from '@/lib/api/messages'
 import { MessageBubble } from './MessageBubble'
 
 interface MessageListProps {
-  messages: Message[] | undefined
+  messages: MessageWithAttachments[] | undefined
   isLoading: boolean
+  isError?: boolean
   typingIndicator?: string | null
 }
 
-export function MessageList({ messages, isLoading, typingIndicator }: MessageListProps) {
+export function MessageList({ messages, isLoading, isError, typingIndicator }: MessageListProps) {
   const { user } = useAuth()
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -26,6 +27,16 @@ export function MessageList({ messages, isLoading, typingIndicator }: MessageLis
             <div className="bg-ink-muted/10 h-12 w-48 animate-pulse rounded-xl" />
           </div>
         ))}
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8">
+        <p className="text-danger text-center text-[0.875rem]">
+          Failed to load messages
+        </p>
       </div>
     )
   }

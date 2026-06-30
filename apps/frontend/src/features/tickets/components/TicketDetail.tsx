@@ -7,6 +7,7 @@ import { useTypingIndicator } from '../hooks/useTypingIndicator';
 import { TicketStatusBadge } from './TicketStatusBadge';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
+import { ConnectionStatus } from './ConnectionStatus';
 
 function formatDate(ts: number) {
   return new Date(ts).toLocaleString();
@@ -18,7 +19,7 @@ export function TicketDetail({ ticket }: { ticket: TicketData }) {
   const resolveMutation = useResolveTicket();
   const cancelMutation = useCancelTicket();
 
-  const { data: messages, isLoading: messagesLoading } = useMessages(ticket.id);
+  const { data: messages, isLoading: messagesLoading, isError: messagesError } = useMessages(ticket.id);
   const typingIndicator = useTypingIndicator(ticket.id);
 
   const isCustomer = user?.role === 'customer';
@@ -102,12 +103,14 @@ export function TicketDetail({ ticket }: { ticket: TicketData }) {
       </div>
 
       <div className="border-border bg-surface-raised flex h-96 flex-col rounded-xl border">
-        <div className="border-border px-4 py-2.5">
+        <div className="border-border flex items-center justify-between px-4 py-2.5">
           <p className="text-ink text-[0.8125rem] font-medium">Conversation</p>
+          <ConnectionStatus />
         </div>
         <MessageList
           messages={messages}
           isLoading={messagesLoading}
+          isError={messagesError}
           typingIndicator={typingIndicator}
         />
         <MessageInput
