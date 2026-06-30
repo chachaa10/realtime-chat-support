@@ -16,7 +16,7 @@ import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/roles.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
-import { MessagesService } from './messages.service';
+import { MessagesService, type MessageWithAttachments } from './messages.service';
 
 @Controller('tickets/:id/messages')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -29,8 +29,8 @@ export class MessagesController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    const messages = await this.messagesService.getMessages(id, user)
-    return { data: messages }
+    const msgs = await this.messagesService.getMessages(id, user)
+    return { data: msgs }
   }
 
   @Post()
@@ -41,7 +41,7 @@ export class MessagesController {
     body: { ticketId: number; body: string; attachmentIds?: number[] },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    const message = await this.messagesService.sendMessage(id, user, body.body)
-    return { data: message }
+    const msg = await this.messagesService.sendMessage(id, user, body.body, body.attachmentIds)
+    return { data: msg }
   }
 }

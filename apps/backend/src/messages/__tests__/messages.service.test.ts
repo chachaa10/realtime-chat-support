@@ -24,8 +24,8 @@ vi.mock('@repo/shared', async (importOriginal) => {
 })
 
 import { Test, type TestingModule } from '@nestjs/testing'
-import { db, tickets } from '@repo/database'
-import { sql } from 'drizzle-orm'
+import { db, tickets, attachments } from '@repo/database'
+import { eq, sql } from 'drizzle-orm'
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 
 import type { AuthenticatedUser } from '../../auth/guards/jwt-auth.guard'
@@ -111,6 +111,14 @@ function createTables() {
       ticket_id integer NOT NULL REFERENCES tickets(id),
       label_id integer NOT NULL REFERENCES labels(id),
       PRIMARY KEY (ticket_id, label_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS attachments (
+      id integer PRIMARY KEY AUTOINCREMENT, message_id integer REFERENCES messages(id),
+      ticket_id integer NOT NULL REFERENCES tickets(id),
+      uploader_id text NOT NULL REFERENCES profiles(id),
+      file_name text NOT NULL, file_size integer NOT NULL,
+      mime_type text NOT NULL, file_path text NOT NULL,
+      created_at integer NOT NULL
     )`,
   ]
   for (const s of stmts) db.run(s)
@@ -272,5 +280,39 @@ describe('sendMessage', () => {
 
   it('throws NotFoundError for non-existent ticket', () => {
     expect(() => service.sendMessage(999999, customer, 'Hello')).toThrow('Ticket not found')
+  })
+
+  it('links orphan attachments to the sent message', () => {
+    const ticketId = createTicket()
+    const now = Date.now()
+
+    const attachRows = db
+      .insert(attachments)
+      .values({
+        messageId: null,
+        ticketId,
+        uploaderId: customer.id,
+        fileName: 'test.png',
+        fileSize: 100,
+        mimeType: 'image/png',
+        filePath: 'test.png',
+        createdAt: now,
+      })
+      .returning()
+      .all() as { id: number; messageId: number | null }[]
+
+    const attachmentId = attachRows[0].id
+    expect(attachRows[0].messageId).toBeNull()
+
+    // @ts-expect-error - sendMessage now accepts attachmentIds
+    const message = service.sendMessage(ticketId, customer, 'With attachment', [attachmentId])
+
+    const updated = db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.id, attachmentId))
+      .all() as { id: number; messageId: number | null }[]
+
+    expect(updated[0].messageId).toBe(message.id)
   })
 })

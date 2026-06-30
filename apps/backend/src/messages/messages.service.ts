@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { db, tickets, messages } from '@repo/database';
-import { eq, asc } from 'drizzle-orm';
+import { db, tickets, messages, attachments } from '@repo/database';
+import { eq, and, asc, inArray } from 'drizzle-orm';
 import type { Message } from '@repo/shared';
 
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
@@ -14,13 +14,29 @@ interface TicketRow {
   agentId: string | null
 }
 
+interface AttachmentRow {
+  id: number
+  messageId: number | null
+  ticketId: number
+  uploaderId: string
+  fileName: string
+  fileSize: number
+  mimeType: string
+  filePath: string
+  createdAt: number
+}
+
+export interface MessageWithAttachments extends Message {
+  attachments: AttachmentRow[]
+}
+
 @Injectable()
 export class MessagesService {
   constructor(
     @Inject(MESSAGE_BROADCASTER) private readonly broadcaster: MessageBroadcaster,
   ) {}
 
-  getMessages(ticketId: number, user: AuthenticatedUser): Message[] {
+  getMessages(ticketId: number, user: AuthenticatedUser): MessageWithAttachments[] {
     this.checkTicketAccess(ticketId, user)
 
     const rows = db
@@ -30,16 +46,15 @@ export class MessagesService {
       .orderBy(asc(messages.createdAt))
       .all() as Message[]
 
-    return rows.map((m) => ({
-      id: m.id,
-      ticketId: m.ticketId,
-      authorId: m.authorId,
-      body: m.body,
-      createdAt: m.createdAt,
-    }))
+    return this.enrichWithAttachments(rows)
   }
 
-  sendMessage(ticketId: number, user: AuthenticatedUser, body: string): Message {
+  sendMessage(
+    ticketId: number,
+    user: AuthenticatedUser,
+    body: string,
+    attachmentIds?: number[],
+  ): MessageWithAttachments {
     const ticket = this.checkTicketAccess(ticketId, user)
 
     if (user.role === 'customer' && (ticket.status === 'resolved' || ticket.status === 'cancelled')) {
@@ -59,9 +74,49 @@ export class MessagesService {
       .all() as Message[]
 
     const message = rows[0]
-    this.broadcaster.messageSent(ticketId, message)
 
-    return message
+    if (attachmentIds?.length) {
+      for (const attachmentId of attachmentIds) {
+        db
+          .update(attachments)
+          .set({ messageId: message.id })
+          .where(
+            and(
+              eq(attachments.id, attachmentId),
+              eq(attachments.uploaderId, user.id),
+            ),
+          )
+          .run()
+      }
+    }
+
+    const enriched = this.enrichWithAttachments([message])[0]
+    this.broadcaster.messageSent(ticketId, enriched)
+
+    return enriched
+  }
+
+  private enrichWithAttachments(msgs: Message[]): MessageWithAttachments[] {
+    if (msgs.length === 0) return []
+
+    const msgIds = msgs.map((m) => m.id)
+    const attachRows = db
+      .select()
+      .from(attachments)
+      .where(inArray(attachments.messageId, msgIds))
+      .all() as AttachmentRow[]
+
+    const attachMap = new Map<number, AttachmentRow[]>()
+    for (const a of attachRows) {
+      const list = attachMap.get(a.messageId!) ?? []
+      list.push(a)
+      attachMap.set(a.messageId!, list)
+    }
+
+    return msgs.map((m) => ({
+      ...m,
+      attachments: attachMap.get(m.id) ?? [],
+    }))
   }
 
   private checkTicketAccess(ticketId: number, user: AuthenticatedUser): TicketRow {
