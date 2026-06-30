@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
 import { createClient, getDb, closeDb, db } from '../client';
-import { runMigrations } from '../migrate';
 
 describe('createClient', () => {
   it('creates an in-memory database by default', () => {

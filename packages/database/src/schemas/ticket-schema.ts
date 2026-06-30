@@ -13,8 +13,10 @@ export const tickets = sqliteTable(
     })
       .notNull()
       .default('open'),
-    customerId: text('customer_id').notNull().references(profiles.id),
-    agentId: text('agent_id').references(profiles.id),
+    customerId: text('customer_id')
+      .notNull()
+      .references(() => profiles.id),
+    agentId: text('agent_id').references(() => profiles.id),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
     resolvedAt: integer('resolved_at'),

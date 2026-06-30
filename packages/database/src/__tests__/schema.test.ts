@@ -127,60 +127,60 @@ describe('runMigrations', () => {
   });
 });
 
-describe('auth schema $onUpdate callbacks', () => {
-  function runMigrationsForAuth(db: any) {
-    db.run(sql`CREATE TABLE IF NOT EXISTS users (
-      id text PRIMARY KEY, name text NOT NULL, email text NOT NULL UNIQUE,
-      email_verified integer DEFAULT false NOT NULL, image text,
-      created_at integer NOT NULL, updated_at integer NOT NULL
-    )`);
-    db.run(sql`CREATE TABLE IF NOT EXISTS sessions (
-      id text PRIMARY KEY, expires_at integer NOT NULL,
-      token text NOT NULL UNIQUE, created_at integer NOT NULL,
-      updated_at integer NOT NULL, ip_address text, user_agent text,
-      user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE
-    )`);
-    db.run(sql`CREATE TABLE IF NOT EXISTS accounts (
-      id text PRIMARY KEY, account_id text NOT NULL, provider_id text NOT NULL,
-      user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      access_token text, refresh_token text, id_token text,
-      access_token_expires_at integer, refresh_token_expires_at integer,
-      scope text, password text,
-      created_at integer NOT NULL, updated_at integer NOT NULL
-    )`);
-    db.run(sql`CREATE TABLE IF NOT EXISTS verifications (
-      id text PRIMARY KEY, identifier text NOT NULL, value text NOT NULL,
-      expires_at integer NOT NULL, created_at integer NOT NULL,
-      updated_at integer NOT NULL
-    )`);
-  }
+function runMigrationsForAuth(db: any) {
+  db.run(sql`CREATE TABLE IF NOT EXISTS users (
+    id text PRIMARY KEY, name text NOT NULL, email text NOT NULL UNIQUE,
+    email_verified integer DEFAULT false NOT NULL, image text,
+    created_at integer NOT NULL, updated_at integer NOT NULL
+  )`);
+  db.run(sql`CREATE TABLE IF NOT EXISTS sessions (
+    id text PRIMARY KEY, expires_at integer NOT NULL,
+    token text NOT NULL UNIQUE, created_at integer NOT NULL,
+    updated_at integer NOT NULL, ip_address text, user_agent text,
+    user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE
+  )`);
+  db.run(sql`CREATE TABLE IF NOT EXISTS accounts (
+    id text PRIMARY KEY, account_id text NOT NULL, provider_id text NOT NULL,
+    user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    access_token text, refresh_token text, id_token text,
+    access_token_expires_at integer, refresh_token_expires_at integer,
+    scope text, password text,
+    created_at integer NOT NULL, updated_at integer NOT NULL
+  )`);
+  db.run(sql`CREATE TABLE IF NOT EXISTS verifications (
+    id text PRIMARY KEY, identifier text NOT NULL, value text NOT NULL,
+    expires_at integer NOT NULL, created_at integer NOT NULL,
+    updated_at integer NOT NULL
+  )`);
+}
 
+describe('auth schema $onUpdate callbacks', () => {
   it('triggers $onUpdate for users', () => {
     const db = createClient();
     runMigrationsForAuth(db);
-    const sql = db.update(users).set({ name: 'Test' }).toSQL();
-    expect(sql.sql).toContain('updated_at');
+    const stmt = db.update(users).set({ name: 'Test' }).toSQL();
+    expect(stmt.sql).toContain('updated_at');
   });
 
   it('triggers $onUpdate for sessions', () => {
     const db = createClient();
     runMigrationsForAuth(db);
-    const sql = db.update(sessions).set({ ipAddress: 'x' }).toSQL();
-    expect(sql.sql).toContain('updated_at');
+    const stmt = db.update(sessions).set({ ipAddress: 'x' }).toSQL();
+    expect(stmt.sql).toContain('updated_at');
   });
 
   it('triggers $onUpdate for accounts', () => {
     const db = createClient();
     runMigrationsForAuth(db);
-    const sql = db.update(accounts).set({ scope: 'user' }).toSQL();
-    expect(sql.sql).toContain('updated_at');
+    const stmt = db.update(accounts).set({ scope: 'user' }).toSQL();
+    expect(stmt.sql).toContain('updated_at');
   });
 
   it('triggers $onUpdate for verifications', () => {
     const db = createClient();
     runMigrationsForAuth(db);
-    const sql = db.update(verifications).set({ value: 'x' }).toSQL();
-    expect(sql.sql).toContain('updated_at');
+    const stmt = db.update(verifications).set({ value: 'x' }).toSQL();
+    expect(stmt.sql).toContain('updated_at');
   });
 });
 

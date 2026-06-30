@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 import { DatabaseModule, DB_PROVIDER } from '../database.module';
 
