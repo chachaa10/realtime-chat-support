@@ -32,4 +32,5 @@ export const CreateTicketSchema = z.object({
     .string()
     .min(1, { error: 'Description is required' })
     .max(5000, { error: 'Description must be at most 5000 characters' }),
+  labelIds: z.array(z.number()).optional(),
 });

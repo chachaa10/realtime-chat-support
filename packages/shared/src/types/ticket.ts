@@ -9,3 +9,7 @@ import type {
 export type Ticket = z.infer<typeof TicketValidation>;
 export type TicketStatus = z.infer<typeof TicketStatusEnum>;
 export type CreateTicketInput = z.infer<typeof CreateTicketSchema>;
+
+export interface TicketWithLabels extends Ticket {
+  labels?: import('./label').Label[];
+}

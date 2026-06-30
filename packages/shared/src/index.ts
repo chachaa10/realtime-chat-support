@@ -6,8 +6,15 @@ export type { PasswordRule } from './validations/password-rules';
 export { TicketSchema, CreateTicketSchema, TicketStatus } from './validations/ticket-validation';
 export { MessageSchema, SendMessageSchema } from './validations/message-validation';
 export { AttachmentSchema } from './validations/attachment-validation';
+export { LabelSchema } from './validations/label-validation';
 export type { Profile } from './types/profile';
 export type { LoginInput, RegisterInput } from './types/auth';
-export type { Ticket, TicketStatus as TicketStatusType, CreateTicketInput } from './types/ticket';
+export type {
+  Ticket,
+  TicketStatus as TicketStatusType,
+  CreateTicketInput,
+  TicketWithLabels,
+} from './types/ticket';
 export type { Message, SendMessageInput } from './types/message';
 export type { Attachment } from './types/attachment';
+export type { Label } from './types/label';
