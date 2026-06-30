@@ -16,7 +16,7 @@
 ## Database
 
 - `packages/database/` is NestJS-agnostic. Schema + client factory + `drizzle-kit generate` SQL migrations live here.
-- `apps/backend/src/database/database.module.ts` is a thin NestJS wrapper importing `createClient` from `@repo/database`.
+- DB initialization is handled by the `db` lazy Proxy from `@repo/database` — no NestJS module wrapper.
 - Migrations: SQL files in `packages/database/src/migrations/`.
 - Build tool for packages: `tsdown`.
 
@@ -24,8 +24,9 @@
 
 ```
 @repo/shared ──► frontend
-@repo/database ──► backend
 @repo/shared ──► backend
+@repo/shared ──► @repo/database  (constants shared with Drizzle schemas)
+@repo/database ──► backend
 ```
 
 ## Documentation
@@ -69,12 +70,14 @@ Key entities:
 - **Response shape**: `{ data: T }` on success, `{ error: { code, message, errors? } }` on error.
 - **Error hierarchy**: `AppError` base class → `NotFoundError` (404), `ForbiddenError` (403), `ConflictError` (409), `ValidationError` (400).
 - **DB access**: global `db` proxy from `@repo/database` — no repository layer. Direct Drizzle queries in services.
-- **File storage**: `FileStorage` port/adapter. `LocalFileStorage` writes to `uploads/`. Swappable to S3.
+- **Broadcast abstraction**: service depends on `TicketBroadcaster` interface, not concrete `TicketsGateway`. Gateway implements the interface as a Socket.io adapter. Tests inject a spy adapter.
+- **Auth**: `AuthService` class wraps better-auth and is injected via DI. Controllers and gateways inject it rather than importing the module-level `auth` singleton.
 
 ### Frontend (React + Vite)
 
 - **Routes**: thin route files in `src/routes/` that delegate to feature components. Route tree assembled in `router.ts`.
-- **Features**: self-contained modules in `src/features/` with `components/`, `hooks/` (TanStack Query), `utils/` (API client).
+- **Features**: self-contained modules in `src/features/` with `components/`, `hooks/` (TanStack Query).
+- **API client**: shared typed client in `src/lib/api/` with transport layer (`get`, `post`, `patch`, `del`) and per-domain endpoint files (`tickets.ts`, `auth.ts`). Returns typed `T` directly (unwraps `{ data: T }`). Throws typed error classes (`NotFoundError`, `ForbiddenError`, `ConflictError`, `ValidationError`) matching backend's `AppError` hierarchy.
 - **UI components**: shadcn primitives in `src/components/ui/` (Base UI + CVA). Custom components in `src/design-system/`.
 - **CSS**: Tailwind v4 native (`@theme`, `@layer`) with OKLCH design tokens. Dark mode via `.dark` class.
 - **Forms**: `react-hook-form` + `@hookform/resolvers` + Zod schemas.
@@ -108,7 +111,7 @@ Key entities:
 
 - **Runner**: Vitest with `globals: true` everywhere.
 - **Backend tests**: integration-style with real SQLite in temp files. Use `TestingModule` from `@nestjs/testing`. Mock `@repo/shared` for env vars. Clean up DB in `afterAll`.
-- **Unit tests**: mock `auth` and `db` modules with `vi.mock`. Use `vi.hoisted()` for hoisted mock variables.
+- **Unit tests**: mock `AuthService` and `db` modules with `vi.mock`. Use `vi.hoisted()` for hoisted mock variables.
 - **Factories**: use helpers from `apps/backend/src/__tests__/helpers/factories.ts` — `buildUser()`, `buildCustomer()`, `buildAgent()`, `buildTicket()`, `buildMessage()` with overrides.
 - **Mocks**: `mockDb()` from `apps/backend/src/__tests__/helpers/mocks.ts` for stubbed DB calls.
 - **File placement**: co-locate `__tests__/` directory inside each feature module (e.g., `tickets/__tests__/tickets.service.test.ts`).

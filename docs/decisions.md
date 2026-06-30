@@ -22,8 +22,23 @@
 | 11 | Auth | better-auth with Drizzle adapter. Email/password only. |
 | 12 | Rate limiting | @nestjs/throttler: 100 req/min per-user, 500 req/min global ceiling. WS: 1 reconnect:sync/5s per socket, 10 connects/min per IP. |
 | 13 | API response contract | Success: { data: T }, Error: { error: { code, message, errors? } }, Paginated: { data: T[], meta: { cursor } } |
-| 14 | File storage | Abstracted behind FileStorage port/adapter. LocalFileStorage writes to uploads/. Swappable to S3. |
+| 14 | File storage | Abstracted behind FileStorage port/adapter. LocalFileStorage writes to uploads/. Swappable to S3. _(Scaffolded then removed — re-add with the feature when built.)_ |
 | 40 | Attachment flow | Two-level: ticket-level (at creation) + message-level (in chat). Two-step orphan-then-link: upload -> upload token -> link on form submit. Orphans cleaned after 1 hour. Age-based cleanup after 30 days. |
+
+## Backend — Architecture (added 2026-06-30)
+
+| # | Decision | Choice |
+|---|---|---|
+| 48 | Broadcast seam | `TicketBroadcaster` interface with one method per event. `TicketsGateway` implements it as Socket.io adapter. Service depends on interface. Tests inject spy adapter. |
+| 49 | Auth DI | `AuthService` class wrapping better-auth's `getSession`. Registered as provider in `AppAuthModule`. Guards and gateways inject it rather than importing the module-level `auth` singleton. |
+| 50 | DB init | No NestJS module wrapper. `db` lazy Proxy from `@repo/database` handles initialization. DatabaseModule deleted. |
+| 51 | Domain constants | `TICKET_STATUSES` and `ROLES` extracted to `packages/shared/src/constants.ts` as `as const` arrays. Zod schemas and Drizzle column enums both derive from these. |
+
+## Frontend — Architecture (added 2026-06-30)
+
+| # | Decision | Choice |
+|---|---|---|
+| 52 | API client | Single shared client at `src/lib/api/client.ts` with typed transport functions (`get`, `post`, `patch`, `del`). Per-domain endpoint files (`api/tickets.ts`, `api/auth.ts`). Automatic `{ data: T }` unwrapping. Typed error classes matching backend's `AppError` hierarchy. |
 
 ## Database
 
