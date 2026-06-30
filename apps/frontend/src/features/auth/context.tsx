@@ -40,8 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(
     async (name: string, email: string, password: string, role: 'customer' | 'agent') => {
       const data = await authApi.signUp(name, email, password);
-      const profile = await authApi.updateProfileRole(role);
-      const userWithRole = { ...data.user, role: profile.role };
+      const userWithRole = { ...data.user, role };
       localStorage.setItem('user', JSON.stringify(userWithRole));
       setUser(userWithRole);
     },

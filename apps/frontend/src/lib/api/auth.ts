@@ -1,4 +1,4 @@
-import { get, post, patch } from './client';
+import { get, post } from './client';
 
 export interface AuthData {
   token?: string;
@@ -23,10 +23,6 @@ export function login(email: string, password: string): Promise<AuthData> {
 
 export function signUp(name: string, email: string, password: string): Promise<AuthData> {
   return post<AuthData>('/api/auth/sign-up/email', { name, email, password });
-}
-
-export function updateProfileRole(role: 'customer' | 'agent'): Promise<ProfileData> {
-  return patch<ProfileData>('/auth/profile', { role });
 }
 
 export function fetchProfile(): Promise<ProfileData> {

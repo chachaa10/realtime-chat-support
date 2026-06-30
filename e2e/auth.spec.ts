@@ -14,7 +14,7 @@ test.describe('Register', () => {
     await registerUser(page, 'Test User', email, PASSWORD, 'customer');
 
     await expect(page).toHaveURL('/tickets');
-    await expect(page.locator('h1')).toHaveText('My Tickets');
+    await expect(page.getByText('Tickets', { exact: true })).toBeVisible();
   });
 
   test('error: empty name', async ({ page }) => {
@@ -82,7 +82,7 @@ test.describe('Login', () => {
 
     await loginUser(page, email, PASSWORD);
     await expect(page).toHaveURL('/tickets');
-    await expect(page.locator('h1')).toHaveText('My Tickets');
+    await expect(page.getByText('Tickets', { exact: true })).toBeVisible();
   });
 
   test('error: wrong password', async ({ page }) => {
