@@ -1,1 +1,188 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --color-surface: var(--color-surface);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-ink: var(--color-ink);
+  --color-ink-muted: var(--color-ink-muted);
+  --color-ink-dim: var(--color-ink-dim);
+  --color-brand: var(--color-brand);
+  --color-brand-hover: var(--color-brand-hover);
+  --color-accent: var(--color-accent);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-hero-bg: var(--color-hero-bg);
+  --ease-out-quart: cubic-bezier(0.25, 0.75, 0.5, 1);
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal-backdrop: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+}
+
+:root {
+  --color-surface: oklch(0.985 0.002 190);
+  --color-surface-raised: oklch(1 0 0);
+  --color-surface-sunken: oklch(0.95 0.004 190);
+  --color-ink: oklch(0.12 0.01 190);
+  --color-ink-muted: oklch(0.45 0.02 190);
+  --color-ink-dim: oklch(0.6 0.015 190);
+  --color-brand: oklch(0.5 0.13 190);
+  --color-brand-hover: oklch(0.45 0.14 190);
+  --color-accent: oklch(0.55 0.18 30);
+  --color-border: oklch(0.88 0.006 190);
+  --color-border-strong: oklch(0.78 0.008 190);
+  --color-success: oklch(0.6 0.15 145);
+  --color-warning: oklch(0.7 0.15 85);
+  --color-danger: oklch(0.55 0.2 30);
+  --color-hero-bg: oklch(0.96 0.004 190);
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal-backdrop: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+  --background: var(--color-surface);
+  --foreground: var(--color-ink);
+  --card: var(--color-surface-raised);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-surface-raised);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-brand);
+  --primary-foreground: oklch(0.97 0 0);
+  --secondary: var(--color-surface-sunken);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-surface-sunken);
+  --muted-foreground: var(--color-ink-dim);
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-danger);
+  --destructive-foreground: oklch(0.97 0 0);
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-brand);
+  --chart-1: var(--color-brand);
+  --chart-2: var(--color-accent);
+  --chart-3: var(--color-warning);
+  --chart-4: var(--color-success);
+  --chart-5: var(--color-danger);
+  --radius: 0.5rem;
+  --sidebar: var(--color-surface-sunken);
+  --sidebar-foreground: var(--color-ink);
+  --sidebar-primary: var(--color-brand);
+  --sidebar-primary-foreground: oklch(0.97 0 0);
+  --sidebar-accent: var(--color-accent);
+  --sidebar-accent-foreground: var(--color-ink);
+  --sidebar-border: var(--color-border);
+  --sidebar-ring: var(--color-brand);
+}
+
+.dark {
+  --color-surface: oklch(0.1 0.005 190);
+  --color-surface-raised: oklch(0.14 0.008 190);
+  --color-surface-sunken: oklch(0.08 0.003 190);
+  --color-ink: oklch(0.92 0.005 190);
+  --color-ink-muted: oklch(0.65 0.01 190);
+  --color-ink-dim: oklch(0.5 0.01 190);
+  --color-brand: oklch(0.6 0.12 190);
+  --color-brand-hover: oklch(0.65 0.11 190);
+  --color-accent: oklch(0.6 0.18 30);
+  --color-border: oklch(0.22 0.008 190);
+  --color-border-strong: oklch(0.3 0.01 190);
+  --color-hero-bg: oklch(0.06 0.003 190);
+}
+
+html {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+::selection {
+  background-color: color-mix(in oklch, var(--color-brand) 25%, transparent);
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
