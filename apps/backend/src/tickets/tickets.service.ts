@@ -8,6 +8,8 @@ import { TICKET_BROADCASTER, type TicketBroadcaster } from './ticket-broadcaster
 
 type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'cancelled';
 
+const AGENT_MAX_CAPACITY = 8
+
 interface CreateTicketInput {
   subject: string;
   description: string;
@@ -148,6 +150,16 @@ export class TicketsService {
   accept(id: number, user: AuthenticatedUser) {
     if (user.role !== 'agent') {
       throw new ForbiddenError('Only agents can accept tickets');
+    }
+
+    const inProgressCount = db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(tickets)
+      .where(and(eq(tickets.agentId, user.id), eq(tickets.status, 'in_progress' as const)))
+      .all() as { count: number }[];
+
+    if (inProgressCount[0].count >= AGENT_MAX_CAPACITY) {
+      throw new ConflictError('You have reached your capacity limit');
     }
 
     const now = Date.now();

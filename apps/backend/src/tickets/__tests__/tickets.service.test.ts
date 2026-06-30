@@ -236,6 +236,17 @@ describe('accept', () => {
     service.accept(ticket.id, agent);
     expect(() => service.accept(ticket.id, otherAgent)).toThrow(/already/);
   });
+
+  it('rejects accept when agent is at capacity', () => {
+    const tickets: number[] = []
+    for (let i = 0; i < 8; i++) {
+      const t = service.create(otherCustomer, { subject: `Capacity ${i}`, description: 'X' })
+      tickets.push(service.accept(t.id, otherAgent).id)
+    }
+
+    const overflow = service.create(otherCustomer, { subject: 'Overflow', description: 'X' })
+    expect(() => service.accept(overflow.id, otherAgent)).toThrow('capacity limit')
+  });
 });
 
 describe('resolve', () => {
