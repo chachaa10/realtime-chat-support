@@ -1,13 +1,9 @@
-import { Link, createRoute, useSearch } from '@tanstack/react-router';
+import { Outlet, createRoute, useMatch } from '@tanstack/react-router';
 
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/features/auth/context';
-import { LabelFilter } from '@/features/tickets/components/LabelFilter';
-import { QueueTabs } from '@/features/tickets/components/QueueTabs';
-import { TicketList } from '@/features/tickets/components/TicketList';
-import { useTickets } from '@/features/tickets/hooks/useTickets';
+import { TicketSidebar } from '@/features/tickets/components/TicketSidebar';
 
 import { rootRoute } from '../__root';
+import { ticketDetailRoute } from './$ticketId';
 
 export interface TicketSearch {
   tab?: 'my' | 'queue';
@@ -17,53 +13,53 @@ export interface TicketSearch {
 export const ticketsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/tickets',
-  validateSearch: (search: Record<string, unknown>): TicketSearch => ({
-    tab: (search.tab as 'my' | 'queue') || undefined,
-    label: search.label as string | undefined,
-  }),
-  component: TicketsPage,
+  component: TicketsLayout,
 });
 
-function TicketsPage() {
-  const { user } = useAuth();
-  const search = useSearch({ from: ticketsRoute.id }) as TicketSearch;
-  const isAgent = user?.role === 'agent';
-
-  const tab = search.tab ?? (isAgent ? 'my' : 'my');
-  const label = search.label;
-
-  const { data: tickets, isLoading } = useTickets({ tab, label });
+function TicketsLayout() {
+  const detailMatch = useMatch({ from: ticketDetailRoute.id, shouldThrow: false });
+  const activeTicketId = detailMatch ? Number(detailMatch.params.ticketId) : undefined;
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-ink text-[1.25rem] font-semibold">
-            {isAgent ? (tab === 'my' ? 'My Tickets' : 'Queue') : 'My Tickets'}
-          </h1>
-          <p className="text-ink-muted mt-0.5 text-[0.8125rem]">
-            {isAgent
-              ? tab === 'my'
-                ? 'Tickets you are currently handling'
-                : 'Open tickets awaiting an agent'
-              : 'Your support tickets'}
-          </p>
-        </div>
-        {!isAgent && (
-          <Link to="/tickets/new">
-            <Button>New Ticket</Button>
-          </Link>
-        )}
+    <div className="flex h-full">
+      <TicketSidebar activeTicketId={activeTicketId} />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Outlet />
       </div>
+    </div>
+  );
+}
 
-      {isAgent && <QueueTabs />}
-      {isAgent && tab === 'queue' && <LabelFilter />}
+export const ticketsIndexRoute = createRoute({
+  getParentRoute: () => ticketsRoute,
+  path: '/',
+  component: TicketsIndexPage,
+});
 
-      <TicketList
-        tickets={tickets}
-        isLoading={isLoading}
-        emptyMessage={isAgent && tab === 'my' ? 'No tickets assigned to you' : 'No tickets yet'}
-      />
+function TicketsIndexPage() {
+  return (
+    <div className="flex h-full items-center justify-center">
+      <div className="flex flex-col items-center gap-3 px-6 text-center">
+        <div className="bg-surface-sunken flex h-14 w-14 items-center justify-center rounded-full">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-ink-muted"
+          >
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </div>
+        <h2 className="text-ink text-[1rem] font-semibold">Select a ticket</h2>
+        <p className="text-ink-muted max-w-xs text-[0.8125rem]">
+          Choose a ticket from the sidebar to view the conversation, or create a new ticket.
+        </p>
+      </div>
     </div>
   );
 }

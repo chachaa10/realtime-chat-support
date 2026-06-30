@@ -31,7 +31,7 @@ export function LoginForm() {
   async function onSubmit(data: LoginInput) {
     try {
       await login(data.email, data.password);
-      await navigate({ to: '/' });
+      await navigate({ to: '/tickets' });
     } catch {
       setError('root', { message: 'Invalid email or password' });
     }

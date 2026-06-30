@@ -32,11 +32,12 @@ export function RegisterForm() {
   });
 
   const password = watch('password') ?? '';
+  const selectedRole = watch('role');
 
   async function onSubmit(data: RegisterInput) {
     try {
-      await registerUser(data.name, data.email, data.password, 'customer');
-      await navigate({ to: '/' });
+      await registerUser(data.name, data.email, data.password, data.role);
+      await navigate({ to: '/tickets' });
     } catch (err) {
       setError('root', {
         message: err instanceof Error ? err.message : 'Registration failed',
@@ -99,6 +100,50 @@ export function RegisterForm() {
           </button>
         </div>
         <PasswordRequirements value={password} />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Account type</Label>
+        <div className="flex gap-2">
+          <label
+            className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-[0.875rem] font-medium transition-colors ${
+              selectedRole === 'customer'
+                ? 'border-ink text-ink bg-ink/5'
+                : 'border-border text-ink-muted hover:border-ink/30'
+            }`}
+          >
+            <input
+              type="radio"
+              value="customer"
+              {...register('role')}
+              className="sr-only"
+            />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Customer
+          </label>
+          <label
+            className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-[0.875rem] font-medium transition-colors ${
+              selectedRole === 'agent'
+                ? 'border-ink text-ink bg-ink/5'
+                : 'border-border text-ink-muted hover:border-ink/30'
+            }`}
+          >
+            <input
+              type="radio"
+              value="agent"
+              {...register('role')}
+              className="sr-only"
+            />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              <line x1="9" y1="10" x2="15" y2="10" />
+            </svg>
+            Agent
+          </label>
+        </div>
       </div>
 
       <Button type="submit" size="lg" disabled={isSubmitting}>

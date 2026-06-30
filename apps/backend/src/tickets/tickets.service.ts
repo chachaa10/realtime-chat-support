@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { db, tickets, ticketLabels, labels, profiles } from '@repo/database';
-import { eq, and, inArray, sql } from 'drizzle-orm';
+import { eq, and, inArray, sql, desc } from 'drizzle-orm';
 
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { NotFoundError, ForbiddenError, ConflictError } from '../common/errors';
@@ -92,9 +92,9 @@ export class TicketsService {
       conditions.push(eq(tickets.customerId, user.id));
     } else if (options.tab === 'my') {
       conditions.push(eq(tickets.agentId, user.id));
-      conditions.push(eq(tickets.status, 'in_progress' as const));
+      conditions.push(eq(tickets.status, 'in_progress'));
     } else {
-      conditions.push(eq(tickets.status, 'open' as const));
+      conditions.push(eq(tickets.status, 'open'));
       conditions.push(sql`${tickets.agentId} IS NULL`);
     }
 
@@ -106,7 +106,7 @@ export class TicketsService {
       .select()
       .from(tickets)
       .where(and(...conditions))
-      .orderBy(tickets.createdAt)
+      .orderBy(desc(tickets.createdAt))
       .all() as TicketRow[];
 
     if (options.label) {
@@ -130,7 +130,7 @@ export class TicketsService {
       }
     }
 
-    return rows;
+    return rows.map((row) => this.enrichTicket(row));
   }
 
   findById(id: number, user: AuthenticatedUser) {

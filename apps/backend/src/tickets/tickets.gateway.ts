@@ -197,14 +197,17 @@ export class TicketsGateway
 
   ticketAccepted(ticketId: number) {
     this.server?.to('agents')?.emit('ticket:accepted', { ticketId });
+    this.server?.to(`ticket:${ticketId}`)?.emit('ticket:accepted', { ticketId });
   }
 
   ticketResolved(ticketId: number) {
     this.server?.to('agents')?.emit('ticket:resolved', { ticketId });
+    this.server?.to(`ticket:${ticketId}`)?.emit('ticket:resolved', { ticketId });
   }
 
   ticketCancelled(ticketId: number) {
     this.server?.to('agents')?.emit('ticket:cancelled', { ticketId });
+    this.server?.to(`ticket:${ticketId}`)?.emit('ticket:cancelled', { ticketId });
   }
 
   // --- MessageBroadcaster ---

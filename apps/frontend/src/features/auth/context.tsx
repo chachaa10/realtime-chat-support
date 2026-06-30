@@ -31,17 +31,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const data = await authApi.login(email, password);
-    const prev = localStorage.getItem('user');
-    const prevUser = prev ? JSON.parse(prev) : {};
-    const userWithRole = { ...data.user, role: prevUser.role ?? 'customer' };
+    const profile = await authApi.fetchProfile();
+    const userWithRole = { ...data.user, role: profile.role };
     localStorage.setItem('user', JSON.stringify(userWithRole));
     setUser(userWithRole);
   }, []);
 
   const register = useCallback(
     async (name: string, email: string, password: string, role: 'customer' | 'agent') => {
-      const data = await authApi.register(name, email, password);
-      const userWithRole = { ...data.user, role };
+      const data = await authApi.signUp(name, email, password);
+      const profile = await authApi.updateProfileRole(role);
+      const userWithRole = { ...data.user, role: profile.role };
       localStorage.setItem('user', JSON.stringify(userWithRole));
       setUser(userWithRole);
     },

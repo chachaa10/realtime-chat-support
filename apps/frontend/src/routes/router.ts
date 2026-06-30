@@ -5,14 +5,14 @@ import { indexRoute } from './index';
 import { loginRoute } from './login';
 import { registerRoute } from './register';
 import { ticketDetailRoute } from './tickets/$ticketId';
-import { ticketsRoute } from './tickets/index';
+import { ticketsRoute, ticketsIndexRoute } from './tickets/index';
 import { newTicketRoute } from './tickets/new';
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   registerRoute,
-  ticketsRoute.addChildren([newTicketRoute, ticketDetailRoute]),
+  ticketsRoute.addChildren([ticketsIndexRoute, newTicketRoute, ticketDetailRoute]),
 ]);
 
 export const router = createRouter({ routeTree });

@@ -45,6 +45,13 @@ export function useMessages(ticketId: number) {
     [ticketId, queryClient],
   )
 
+  const handleTicketStatusChange = useCallback(
+    (_data: { ticketId: number }) => {
+      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
+    },
+    [ticketId, queryClient],
+  )
+
   useEffect(() => {
     if (!ticketId) return
 
@@ -54,6 +61,9 @@ export function useMessages(ticketId: number) {
 
     socket.on('message:sent', handleMessageSent)
     socket.on('reconnect:sync', handleReconnectSync)
+    socket.on('ticket:accepted', handleTicketStatusChange)
+    socket.on('ticket:resolved', handleTicketStatusChange)
+    socket.on('ticket:cancelled', handleTicketStatusChange)
 
     socket.on('connect', () => {
       const cached = queryClient.getQueryData<MessageWithAttachments[]>(['messages', ticketId])
@@ -70,11 +80,14 @@ export function useMessages(ticketId: number) {
     return () => {
       socket.off('message:sent', handleMessageSent)
       socket.off('reconnect:sync', handleReconnectSync)
+      socket.off('ticket:accepted', handleTicketStatusChange)
+      socket.off('ticket:resolved', handleTicketStatusChange)
+      socket.off('ticket:cancelled', handleTicketStatusChange)
       socket.off('connect')
       socket.off('connect_error')
       socket.emit('leave:ticket', { ticketId })
     }
-  }, [ticketId, handleMessageSent, handleReconnectSync, queryClient])
+  }, [ticketId, handleMessageSent, handleReconnectSync, handleTicketStatusChange, queryClient])
 
   return query
 }
