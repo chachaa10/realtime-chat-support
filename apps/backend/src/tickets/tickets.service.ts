@@ -4,7 +4,7 @@ import { eq, and, inArray, sql } from 'drizzle-orm';
 
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { NotFoundError, ForbiddenError, ConflictError } from '../common/errors';
-import { TicketsGateway } from './tickets.gateway';
+import { TICKET_BROADCASTER, type TicketBroadcaster } from './ticket-broadcaster';
 
 type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'cancelled';
 
@@ -41,7 +41,7 @@ export interface LabelRow {
 
 @Injectable()
 export class TicketsService {
-  constructor(@Inject(TicketsGateway) private readonly gateway: TicketsGateway) {}
+  constructor(@Inject(TICKET_BROADCASTER) private readonly broadcaster: TicketBroadcaster) {}
 
   create(user: AuthenticatedUser, input: CreateTicketInput) {
     if (user.role !== 'customer') {
@@ -71,7 +71,7 @@ export class TicketsService {
     }
 
     const result = this.formatTicketWithJoins(ticket, [], null, null);
-    this.gateway.emitTicketNew(result);
+    this.broadcaster.ticketCreated(result);
 
     return result;
   }
@@ -174,7 +174,7 @@ export class TicketsService {
     }
 
     this.recordEvent(id, 'open', 'in_progress', user.id);
-    this.gateway.emitTicketAccepted(id);
+    this.broadcaster.ticketAccepted(id);
     return this.enrichTicket(rows[0]);
   }
 
@@ -213,7 +213,7 @@ export class TicketsService {
     }
 
     this.recordEvent(id, 'in_progress', 'resolved', user.id);
-    this.gateway.emitTicketResolved(id);
+    this.broadcaster.ticketResolved(id);
     return this.enrichTicket(rows[0]);
   }
 
@@ -250,7 +250,7 @@ export class TicketsService {
     }
 
     this.recordEvent(id, 'open', 'cancelled', user.id);
-    this.gateway.emitTicketCancelled(id);
+    this.broadcaster.ticketCancelled(id);
     return this.enrichTicket(rows[0]);
   }
 

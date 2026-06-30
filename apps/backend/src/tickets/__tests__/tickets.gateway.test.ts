@@ -6,19 +6,16 @@ const mockWhere = vi.hoisted(() => vi.fn(() => ({ limit: mockLimit })));
 const mockFrom = vi.hoisted(() => vi.fn(() => ({ where: mockWhere })));
 const mockSelect = vi.hoisted(() => vi.fn(() => ({ from: mockFrom })));
 
-vi.mock('../../auth/auth', () => ({
-  auth: {
-    api: {
-      getSession: vi.fn(),
-    },
-  },
+const mockGetSession = vi.hoisted(() => vi.fn());
+
+vi.mock('../../auth/auth.service', () => ({
+  AuthService: vi.fn(),
 }));
 
 vi.mock('@repo/database', () => {
   return { db: { select: mockSelect }, profiles: { id: 'profiles' } };
 });
 
-import { auth } from '../../auth/auth';
 import { TicketsGateway } from '../tickets.gateway';
 
 function makeClient(mockOverrides: Record<string, any> = {}) {
@@ -38,7 +35,7 @@ describe('TicketsGateway', () => {
   let gateway: TicketsGateway;
 
   beforeEach(() => {
-    gateway = new TicketsGateway();
+    gateway = new TicketsGateway({ getSession: mockGetSession } as any);
     vi.clearAllMocks();
   });
 
@@ -66,42 +63,42 @@ describe('TicketsGateway', () => {
     });
 
     it('uses token from query when auth token is missing', async () => {
-      vi.mocked(auth.api.getSession).mockResolvedValue(null);
+      mockGetSession.mockResolvedValue(null);
       const client = makeClient({
         handshake: { auth: {}, query: { token: 'query-token' } },
       });
       await gateway.handleConnection(client);
-      expect(auth.api.getSession).toHaveBeenCalledWith({
-        headers: { authorization: 'Bearer query-token' },
+      expect(mockGetSession).toHaveBeenCalledWith({
+        authorization: 'Bearer query-token',
       });
       expect(client.disconnect).toHaveBeenCalledTimes(1);
     });
 
     it('uses token from query when auth is undefined', async () => {
-      vi.mocked(auth.api.getSession).mockResolvedValue(null);
+      mockGetSession.mockResolvedValue(null);
       const client = makeClient({
         handshake: { auth: undefined, query: { token: 'q-token' } },
       });
       await gateway.handleConnection(client);
-      expect(auth.api.getSession).toHaveBeenCalledWith({
-        headers: { authorization: 'Bearer q-token' },
+      expect(mockGetSession).toHaveBeenCalledWith({
+        authorization: 'Bearer q-token',
       });
     });
 
     it('disconnects when session is invalid', async () => {
-      vi.mocked(auth.api.getSession).mockResolvedValue(null);
+      mockGetSession.mockResolvedValue(null);
       const client = makeClient({
         handshake: { auth: { token: 'bad-token' }, query: {} },
       });
       await gateway.handleConnection(client);
-      expect(auth.api.getSession).toHaveBeenCalledWith({
-        headers: { authorization: 'Bearer bad-token' },
+      expect(mockGetSession).toHaveBeenCalledWith({
+        authorization: 'Bearer bad-token',
       });
       expect(client.disconnect).toHaveBeenCalledTimes(1);
     });
 
     it('sets userId and role for customer', async () => {
-      vi.mocked(auth.api.getSession).mockResolvedValue({
+      mockGetSession.mockResolvedValue({
         user: { id: 'cust-1' },
         session: { id: 's1' },
       } as any);
@@ -116,7 +113,7 @@ describe('TicketsGateway', () => {
     });
 
     it('joins agents room for agent role', async () => {
-      vi.mocked(auth.api.getSession).mockResolvedValue({
+      mockGetSession.mockResolvedValue({
         user: { id: 'agent-1' },
         session: { id: 's1' },
       } as any);
@@ -131,7 +128,7 @@ describe('TicketsGateway', () => {
     });
 
     it('defaults to customer when profile not found', async () => {
-      vi.mocked(auth.api.getSession).mockResolvedValue({
+      mockGetSession.mockResolvedValue({
         user: { id: 'unknown' },
         session: { id: 's1' },
       } as any);
@@ -144,7 +141,7 @@ describe('TicketsGateway', () => {
     });
 
     it('disconnects on error', async () => {
-      vi.mocked(auth.api.getSession).mockRejectedValue(new Error('boom'));
+      mockGetSession.mockRejectedValue(new Error('boom'));
       const client = makeClient({
         handshake: { auth: { token: 't' }, query: {} },
       });
@@ -153,38 +150,38 @@ describe('TicketsGateway', () => {
     });
   });
 
-  describe('emitTicketNew', () => {
+  describe('ticketCreated', () => {
     it('emits ticket:new to agents room', () => {
       const server = { to: vi.fn(() => ({ emit: vi.fn() })) };
       gateway.server = server as any;
-      gateway.emitTicketNew({ id: 1 });
+      gateway.ticketCreated({ id: 1 });
       expect(server.to).toHaveBeenCalledWith('agents');
     });
   });
 
-  describe('emitTicketAccepted', () => {
+  describe('ticketAccepted', () => {
     it('emits ticket:accepted to agents room', () => {
       const server = { to: vi.fn(() => ({ emit: vi.fn() })) };
       gateway.server = server as any;
-      gateway.emitTicketAccepted(1);
+      gateway.ticketAccepted(1);
       expect(server.to).toHaveBeenCalledWith('agents');
     });
   });
 
-  describe('emitTicketResolved', () => {
+  describe('ticketResolved', () => {
     it('emits ticket:resolved to agents room', () => {
       const server = { to: vi.fn(() => ({ emit: vi.fn() })) };
       gateway.server = server as any;
-      gateway.emitTicketResolved(1);
+      gateway.ticketResolved(1);
       expect(server.to).toHaveBeenCalledWith('agents');
     });
   });
 
-  describe('emitTicketCancelled', () => {
+  describe('ticketCancelled', () => {
     it('emits ticket:cancelled to agents room', () => {
       const server = { to: vi.fn(() => ({ emit: vi.fn() })) };
       gateway.server = server as any;
-      gateway.emitTicketCancelled(1);
+      gateway.ticketCancelled(1);
       expect(server.to).toHaveBeenCalledWith('agents');
     });
   });
@@ -196,25 +193,25 @@ describe('TicketsGateway', () => {
     });
   });
 
-  describe('emit methods with null server', () => {
-    it('emitTicketNew handles null server gracefully', () => {
+  describe('broadcast methods with null server', () => {
+    it('ticketCreated handles null server gracefully', () => {
       gateway.server = undefined as any;
-      gateway.emitTicketNew({ id: 1 });
+      gateway.ticketCreated({ id: 1 });
     });
 
-    it('emitTicketAccepted handles null server gracefully', () => {
+    it('ticketAccepted handles null server gracefully', () => {
       gateway.server = undefined as any;
-      gateway.emitTicketAccepted(1);
+      gateway.ticketAccepted(1);
     });
 
-    it('emitTicketResolved handles null server gracefully', () => {
+    it('ticketResolved handles null server gracefully', () => {
       gateway.server = undefined as any;
-      gateway.emitTicketResolved(1);
+      gateway.ticketResolved(1);
     });
 
-    it('emitTicketCancelled handles null server gracefully', () => {
+    it('ticketCancelled handles null server gracefully', () => {
       gateway.server = undefined as any;
-      gateway.emitTicketCancelled(1);
+      gateway.ticketCancelled(1);
     });
   });
 });

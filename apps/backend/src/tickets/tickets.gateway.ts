@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -10,13 +10,18 @@ import { db, profiles } from '@repo/database';
 import { eq } from 'drizzle-orm';
 import { Server, Socket } from 'socket.io';
 
-import { auth } from '../auth/auth';
+import { AuthService } from '../auth/auth.service';
+import type { TicketBroadcaster } from './ticket-broadcaster';
 
 @Injectable()
 @WebSocketGateway({
   cors: { origin: '*', credentials: true },
 })
-export class TicketsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class TicketsGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, TicketBroadcaster
+{
+  constructor(private readonly authService: AuthService) {}
+
   @WebSocketServer()
   server!: Server;
 
@@ -32,8 +37,8 @@ export class TicketsGateway implements OnGatewayInit, OnGatewayConnection, OnGat
         return;
       }
 
-      const session = await auth.api.getSession({
-        headers: { authorization: `Bearer ${token}` },
+      const session = await this.authService.getSession({
+        authorization: `Bearer ${token}`,
       });
 
       if (!session?.user) {
@@ -65,19 +70,19 @@ export class TicketsGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     // rooms auto-leave on disconnect
   }
 
-  emitTicketNew(ticket: any) {
+  ticketCreated(ticket: any) {
     this.server?.to('agents')?.emit('ticket:new', { ticket });
   }
 
-  emitTicketAccepted(ticketId: number) {
+  ticketAccepted(ticketId: number) {
     this.server?.to('agents')?.emit('ticket:accepted', { ticketId });
   }
 
-  emitTicketResolved(ticketId: number) {
+  ticketResolved(ticketId: number) {
     this.server?.to('agents')?.emit('ticket:resolved', { ticketId });
   }
 
-  emitTicketCancelled(ticketId: number) {
+  ticketCancelled(ticketId: number) {
     this.server?.to('agents')?.emit('ticket:cancelled', { ticketId });
   }
 }
