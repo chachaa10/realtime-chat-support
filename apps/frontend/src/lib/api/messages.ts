@@ -1,10 +1,16 @@
-import { get, post } from './client'
+import type { Attachment } from '@repo/shared'
 import type { Message } from '@repo/shared'
 
-export function fetchMessages(ticketId: number): Promise<Message[]> {
-  return get<Message[]>(`/tickets/${ticketId}/messages`)
+import { get, post } from './client'
+
+export interface MessageWithAttachments extends Message {
+  attachments: Attachment[]
 }
 
-export function sendMessage(ticketId: number, body: string): Promise<Message> {
-  return post<Message>(`/tickets/${ticketId}/messages`, { ticketId, body })
+export function fetchMessages(ticketId: number): Promise<MessageWithAttachments[]> {
+  return get<MessageWithAttachments[]>(`/tickets/${ticketId}/messages`)
+}
+
+export function sendMessage(ticketId: number, body: string, attachmentIds?: number[]): Promise<MessageWithAttachments> {
+  return post<MessageWithAttachments>(`/tickets/${ticketId}/messages`, { ticketId, body, attachmentIds })
 }
