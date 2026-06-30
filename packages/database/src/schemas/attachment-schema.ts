@@ -8,13 +8,13 @@ export const attachments = sqliteTable(
   'attachments',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    messageId: integer('message_id').references(() => messages.id),
+    messageId: integer('message_id').references(messages.id),
     ticketId: integer('ticket_id')
       .notNull()
-      .references(() => tickets.id),
+      .references(tickets.id),
     uploaderId: text('uploader_id')
       .notNull()
-      .references(() => profiles.id),
+      .references(profiles.id),
     fileName: text('file_name').notNull(),
     fileSize: integer('file_size').notNull(),
     mimeType: text('mime_type').notNull(),

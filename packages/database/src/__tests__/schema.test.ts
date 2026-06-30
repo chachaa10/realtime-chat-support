@@ -1,9 +1,17 @@
-import { eq } from 'drizzle-orm';
+import fs from 'node:fs';
+import path from 'node:path';
+import { tmpdir } from 'node:os';
+import { randomUUID } from 'node:crypto';
+
+import { eq, sql } from 'drizzle-orm';
 import { describe, it, expect } from 'vitest';
 
 import { createClient } from '../client';
 import { runMigrations } from '../migrate';
-import { users, profiles, tickets, ticketEvents, labels, ticketLabels } from '../schema';
+import {
+  users, sessions, accounts, verifications,
+  profiles, tickets, ticketEvents, labels, ticketLabels,
+} from '../schema';
 
 describe('database migrations', () => {
   it('creates all tables', async () => {
@@ -76,6 +84,96 @@ describe('ticket events', () => {
     expect(events[0].fromStatus).toBeNull();
     expect(events[0].toStatus).toBe('open');
     expect(events[0].actorId).toBe('u1');
+  });
+});
+
+describe('runMigrations', () => {
+  it('handles directory without migration folders', async () => {
+    const db = createClient();
+    const dir = import.meta.dirname;
+    await runMigrations(db, dir);
+  });
+
+  it('handles migration folder without migration.sql', async () => {
+    const tmpDir = path.join(tmpdir(), `test-migrate-${randomUUID()}`);
+    const subDir = path.join(tmpDir, '0001_test');
+    fs.mkdirSync(subDir, { recursive: true });
+    // no migration.sql in the subfolder
+    const db = createClient();
+    await runMigrations(db, tmpDir);
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('handles empty statements in migration SQL', async () => {
+    const tmpDir = path.join(tmpdir(), `test-migrate-${randomUUID()}`);
+    const subDir = path.join(tmpDir, '0001_test');
+    fs.mkdirSync(subDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(subDir, 'migration.sql'),
+      'SELECT 1 as v;\n--> statement-breakpoint\n--> statement-breakpoint\nSELECT 2 as v;',
+    );
+    const db = createClient();
+    await runMigrations(db, tmpDir);
+    const rows = db.all('SELECT 2 as v') as { v: number }[];
+    expect(rows[0].v).toBe(2);
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+});
+
+describe('auth schema $onUpdate callbacks', () => {
+  function runMigrationsForAuth(db: any) {
+    db.run(sql`CREATE TABLE IF NOT EXISTS users (
+      id text PRIMARY KEY, name text NOT NULL, email text NOT NULL UNIQUE,
+      email_verified integer DEFAULT false NOT NULL, image text,
+      created_at integer NOT NULL, updated_at integer NOT NULL
+    )`);
+    db.run(sql`CREATE TABLE IF NOT EXISTS sessions (
+      id text PRIMARY KEY, expires_at integer NOT NULL,
+      token text NOT NULL UNIQUE, created_at integer NOT NULL,
+      updated_at integer NOT NULL, ip_address text, user_agent text,
+      user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE
+    )`);
+    db.run(sql`CREATE TABLE IF NOT EXISTS accounts (
+      id text PRIMARY KEY, account_id text NOT NULL, provider_id text NOT NULL,
+      user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      access_token text, refresh_token text, id_token text,
+      access_token_expires_at integer, refresh_token_expires_at integer,
+      scope text, password text,
+      created_at integer NOT NULL, updated_at integer NOT NULL
+    )`);
+    db.run(sql`CREATE TABLE IF NOT EXISTS verifications (
+      id text PRIMARY KEY, identifier text NOT NULL, value text NOT NULL,
+      expires_at integer NOT NULL, created_at integer NOT NULL,
+      updated_at integer NOT NULL
+    )`);
+  }
+
+  it('triggers $onUpdate for users', () => {
+    const db = createClient();
+    runMigrationsForAuth(db);
+    const sql = db.update(users).set({ name: 'Test' }).toSQL();
+    expect(sql.sql).toContain('updated_at');
+  });
+
+  it('triggers $onUpdate for sessions', () => {
+    const db = createClient();
+    runMigrationsForAuth(db);
+    const sql = db.update(sessions).set({ ipAddress: 'x' }).toSQL();
+    expect(sql.sql).toContain('updated_at');
+  });
+
+  it('triggers $onUpdate for accounts', () => {
+    const db = createClient();
+    runMigrationsForAuth(db);
+    const sql = db.update(accounts).set({ scope: 'user' }).toSQL();
+    expect(sql.sql).toContain('updated_at');
+  });
+
+  it('triggers $onUpdate for verifications', () => {
+    const db = createClient();
+    runMigrationsForAuth(db);
+    const sql = db.update(verifications).set({ value: 'x' }).toSQL();
+    expect(sql.sql).toContain('updated_at');
   });
 });
 

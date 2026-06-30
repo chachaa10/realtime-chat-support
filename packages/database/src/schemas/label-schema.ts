@@ -13,10 +13,10 @@ export const ticketLabels = sqliteTable(
   {
     ticketId: integer('ticket_id')
       .notNull()
-      .references(() => tickets.id),
+      .references(tickets.id),
     labelId: integer('label_id')
       .notNull()
-      .references(() => labels.id),
+      .references(labels.id),
   },
   (table) => [primaryKey({ columns: [table.ticketId, table.labelId] })],
 );

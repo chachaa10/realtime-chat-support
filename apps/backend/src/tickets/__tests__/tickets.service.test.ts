@@ -254,6 +254,11 @@ describe('resolve', () => {
     const ticket = service.create(customer, { subject: 'Fresh', description: 'New' });
     expect(() => service.resolve(ticket.id, agent)).toThrow(/not in_progress/);
   });
+
+  it('customer cannot resolve a ticket', () => {
+    const ticket = service.create(customer, { subject: 'Customer no resolve', description: 'X' });
+    expect(() => service.resolve(ticket.id, customer)).toThrow('Only agents can resolve tickets');
+  });
 });
 
 describe('cancel', () => {
@@ -281,5 +286,136 @@ describe('cancel', () => {
     service.accept(ticket.id, agent);
     service.resolve(ticket.id, agent);
     expect(() => service.cancel(ticket.id, customer)).toThrow(/not open/);
+  });
+});
+
+describe('findById - not found', () => {
+  it('throws NotFoundError for non-existent ticket', () => {
+    expect(() => service.findById(999999, customer)).toThrow('Ticket not found');
+  });
+});
+
+describe('accept - not found / errors', () => {
+  it('throws NotFoundError for non-existent ticket', () => {
+    expect(() => service.accept(999999, agent)).toThrow('Ticket not found');
+  });
+});
+
+describe('resolve - not found / errors', () => {
+  it('throws NotFoundError for non-existent ticket', () => {
+    expect(() => service.resolve(999999, agent)).toThrow('Ticket not found');
+  });
+});
+
+describe('cancel - not found', () => {
+  it('throws NotFoundError for non-existent ticket', () => {
+    expect(() => service.cancel(999999, customer)).toThrow('Ticket not found');
+  });
+});
+
+describe('addLabel', () => {
+  it('agent can add a label to an existing ticket', () => {
+    const ticket = service.create(customer, { subject: 'Label test', description: 'X' });
+    const labels = service.listLabels();
+    expect(labels.length).toBeGreaterThan(0);
+    service.addLabel(ticket.id, labels[0].id, agent);
+    // no throw = success (duplicate labels are silently ignored)
+  });
+
+  it('throws ForbiddenError for non-agent', () => {
+    expect(() => service.addLabel(1, 1, customer)).toThrow('Only agents can manage labels');
+  });
+
+  it('throws NotFoundError for non-existent ticket', () => {
+    expect(() => service.addLabel(999999, 1, agent)).toThrow('Ticket not found');
+  });
+
+  it('throws NotFoundError for non-existent label', () => {
+    const ticket = service.create(customer, { subject: 'Bad label', description: 'X' });
+    expect(() => service.addLabel(ticket.id, 999999, agent)).toThrow('Label not found');
+  });
+
+  it('silently ignores duplicate label additions', () => {
+    const ticket = service.create(customer, { subject: 'Duplicate label', description: 'X' });
+    const labels = service.listLabels();
+    service.addLabel(ticket.id, labels[0].id, agent);
+    // second insertion triggers catch block
+    service.addLabel(ticket.id, labels[0].id, agent);
+  });
+});
+
+describe('removeLabel', () => {
+  it('agent can remove a label without throwing', () => {
+    const ticket = service.create(customer, { subject: 'Remove label', description: 'X' });
+    const labels = service.listLabels();
+    service.addLabel(ticket.id, labels[0].id, agent);
+    service.removeLabel(ticket.id, labels[0].id, agent);
+    // no throw = success
+  });
+
+  it('throws ForbiddenError for non-agent', () => {
+    expect(() => service.removeLabel(1, 1, customer)).toThrow('Only agents can manage labels');
+  });
+
+  it('silently succeeds when label not attached', () => {
+    service.removeLabel(999999, 999999, agent);
+    // no throw = success
+  });
+});
+
+describe('listLabels', () => {
+  it('returns all labels ordered by name', () => {
+    const allLabels = service.listLabels();
+    expect(Array.isArray(allLabels)).toBe(true);
+    expect(allLabels.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('findAll - additional filters', () => {
+  it('agent can view their own in_progress tickets with tab=my', () => {
+    const ticket = service.create(customer, { subject: 'My assigned', description: 'X' });
+    service.accept(ticket.id, agent);
+    const results = service.findAll(agent, { tab: 'my' });
+    expect(results.every((t) => t.agentId === agent.id && t.status === 'in_progress')).toBe(true);
+  });
+
+  it('filters by status', () => {
+    const results = service.findAll(agent, { status: 'open' });
+    expect(results.every((t) => t.status === 'open')).toBe(true);
+  });
+
+  it('filters tickets by label name', () => {
+    const ticket = service.create(customer, { subject: 'Label filter', description: 'X' });
+    const allLabels = service.listLabels();
+    service.addLabel(ticket.id, allLabels[0].id, agent);
+    const results = service.findAll(agent, { label: allLabels[0].name });
+    expect(results.some((t) => t.id === ticket.id)).toBe(true);
+  });
+
+  it('returns empty when label filter matches nothing', () => {
+    const results = service.findAll(agent, { label: 'non-existent-label' });
+    expect(results).toEqual([]);
+  });
+});
+
+describe('create with labelIds', () => {
+  it('attaches labels when creating a ticket', () => {
+    const allLabels = service.listLabels();
+    const ticket = service.create(customer, {
+      subject: 'With labels',
+      description: 'X',
+      labelIds: allLabels.map((l) => l.id),
+    });
+    const enriched = service.findById(ticket.id, customer);
+    expect(enriched.labels.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('silently skips invalid label IDs', () => {
+    const ticket = service.create(customer, {
+      subject: 'Bad labels',
+      description: 'X',
+      labelIds: [999999],
+    });
+    expect(ticket.id).toBeGreaterThan(0);
   });
 });

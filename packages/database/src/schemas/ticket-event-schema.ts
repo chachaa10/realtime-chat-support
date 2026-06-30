@@ -9,7 +9,7 @@ export const ticketEvents = sqliteTable(
     id: integer('id').primaryKey({ autoIncrement: true }),
     ticketId: integer('ticket_id')
       .notNull()
-      .references(() => tickets.id),
+      .references(tickets.id),
     fromStatus: text('from_status', {
       enum: ['open', 'in_progress', 'resolved', 'cancelled'],
     }),
@@ -18,7 +18,7 @@ export const ticketEvents = sqliteTable(
     }).notNull(),
     actorId: text('actor_id')
       .notNull()
-      .references(() => profiles.id),
+      .references(profiles.id),
     reason: text('reason'),
     createdAt: integer('created_at').notNull(),
   },

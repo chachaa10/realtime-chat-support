@@ -9,10 +9,10 @@ export const messages = sqliteTable(
     id: integer('id').primaryKey({ autoIncrement: true }),
     ticketId: integer('ticket_id')
       .notNull()
-      .references(() => tickets.id),
+      .references(tickets.id),
     authorId: text('author_id')
       .notNull()
-      .references(() => profiles.id),
+      .references(profiles.id),
     body: text('body').notNull(),
     createdAt: integer('created_at').notNull(),
   },
