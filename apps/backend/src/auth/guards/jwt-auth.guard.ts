@@ -1,10 +1,10 @@
-import { Injectable, Inject, type CanActivate, type ExecutionContext } from '@nestjs/common';
+import { Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { db, profiles } from '@repo/database';
 import { fromNodeHeaders } from 'better-auth/node';
 import { eq } from 'drizzle-orm';
 import type { Request } from 'express';
 
-import { AuthService } from '../auth.service';
+import { auth } from '../auth';
 
 export interface AuthenticatedUser {
   id: string;
@@ -15,11 +15,10 @@ export interface AuthenticatedUser {
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly authService: AuthService) {}
-
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const session = await this.authService.getSession(fromNodeHeaders(request.headers));
+    const headers = new Headers(fromNodeHeaders(request.headers));
+    const session = await auth.api.getSession({ headers });
 
     if (!session?.user) return false;
 

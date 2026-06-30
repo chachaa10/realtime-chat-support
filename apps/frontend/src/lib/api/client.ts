@@ -73,7 +73,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   const body = await res.json();
-  return body.data as T;
+  return (body.data ?? body) as T;
 }
 
 export function get<T>(path: string, options?: RequestInit) {

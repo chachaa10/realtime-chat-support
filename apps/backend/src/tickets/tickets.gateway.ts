@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -10,7 +10,7 @@ import { db, profiles } from '@repo/database';
 import { eq } from 'drizzle-orm';
 import { Server, Socket } from 'socket.io';
 
-import { AuthService } from '../auth/auth.service';
+import { auth } from '../auth/auth';
 import type { TicketBroadcaster } from './ticket-broadcaster';
 
 @Injectable()
@@ -20,8 +20,6 @@ import type { TicketBroadcaster } from './ticket-broadcaster';
 export class TicketsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, TicketBroadcaster
 {
-  constructor(private readonly authService: AuthService) {}
-
   @WebSocketServer()
   server!: Server;
 
@@ -37,9 +35,8 @@ export class TicketsGateway
         return;
       }
 
-      const session = await this.authService.getSession({
-        authorization: `Bearer ${token}`,
-      });
+      const headers = new Headers({ authorization: `Bearer ${token}` });
+      const session = await auth.api.getSession({ headers });
 
       if (!session?.user) {
         client.disconnect();

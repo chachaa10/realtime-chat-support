@@ -2,10 +2,9 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  timeout: 10000,
+  timeout: 5000,
   retries: 0,
   fullyParallel: false,
-  workers: '100%',
   use: {
     baseURL: 'http://localhost:5173',
     headless: true,

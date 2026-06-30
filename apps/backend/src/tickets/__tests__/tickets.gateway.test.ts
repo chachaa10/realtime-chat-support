@@ -8,12 +8,12 @@ const mockSelect = vi.hoisted(() => vi.fn(() => ({ from: mockFrom })));
 
 const mockGetSession = vi.hoisted(() => vi.fn());
 
-vi.mock('../../auth/auth.service', () => ({
-  AuthService: vi.fn(),
+vi.mock('../../auth/auth', () => ({
+  auth: { api: { getSession: mockGetSession } },
 }));
 
 vi.mock('@repo/database', () => {
-  return { db: { select: mockSelect }, profiles: { id: 'profiles' } };
+  return { db: { select: mockSelect }, profiles: { id: 'profiles' }, schema: {} };
 });
 
 import { TicketsGateway } from '../tickets.gateway';
@@ -35,7 +35,7 @@ describe('TicketsGateway', () => {
   let gateway: TicketsGateway;
 
   beforeEach(() => {
-    gateway = new TicketsGateway({ getSession: mockGetSession } as any);
+    gateway = new TicketsGateway();
     vi.clearAllMocks();
   });
 
@@ -69,7 +69,7 @@ describe('TicketsGateway', () => {
       });
       await gateway.handleConnection(client);
       expect(mockGetSession).toHaveBeenCalledWith({
-        authorization: 'Bearer query-token',
+        headers: new Headers({ authorization: 'Bearer query-token' }),
       });
       expect(client.disconnect).toHaveBeenCalledTimes(1);
     });
@@ -81,7 +81,7 @@ describe('TicketsGateway', () => {
       });
       await gateway.handleConnection(client);
       expect(mockGetSession).toHaveBeenCalledWith({
-        authorization: 'Bearer q-token',
+        headers: new Headers({ authorization: 'Bearer q-token' }),
       });
     });
 
@@ -92,7 +92,7 @@ describe('TicketsGateway', () => {
       });
       await gateway.handleConnection(client);
       expect(mockGetSession).toHaveBeenCalledWith({
-        authorization: 'Bearer bad-token',
+        headers: new Headers({ authorization: 'Bearer bad-token' }),
       });
       expect(client.disconnect).toHaveBeenCalledTimes(1);
     });
