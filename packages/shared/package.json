@@ -10,6 +10,11 @@
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
+    },
+    "./init-env": {
+      "types": "./dist/init-env.d.mts",
+      "import": "./dist/init-env.mjs",
+      "default": "./dist/init-env.mjs"
     }
   },
   "scripts": {
@@ -19,6 +24,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "dotenv": "^16.5.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
