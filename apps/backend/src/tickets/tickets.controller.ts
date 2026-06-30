@@ -103,6 +103,7 @@ export class TicketsController {
   }
 
   @Delete(':id/labels/:labelId')
+  @Roles('agent')
   async removeLabel(
     @Param('id', ParseIntPipe) id: number,
     @Param('labelId', ParseIntPipe) labelId: number,
