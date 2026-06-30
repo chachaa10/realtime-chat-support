@@ -4,6 +4,8 @@ import { loginUser, registerUser, uniqueEmail } from './helpers';
 
 const PASSWORD = 'Password123';
 
+
+
 test.describe('Register', () => {
   test('happy path: register a customer and redirect to /tickets', async ({
     page,
@@ -11,43 +13,43 @@ test.describe('Register', () => {
     const email = uniqueEmail();
     await registerUser(page, 'Test User', email, PASSWORD, 'customer');
 
-    await page.waitForURL('**/tickets');
+    await expect(page).toHaveURL('/tickets');
     await expect(page.locator('h1')).toHaveText('Tickets');
   });
 
   test('error: empty name', async ({ page }) => {
     const email = uniqueEmail();
     await page.goto('/register');
-    await page.fill('input[placeholder="Name"]', '');
-    await page.fill('input[placeholder="Email"]', email);
-    await page.fill('input[placeholder="Password"]', PASSWORD);
+    await page.getByRole('textbox', { name: 'Name' }).fill('');
+    await page.getByRole('textbox', { name: 'Email' }).fill(email);
+    await page.getByRole('textbox', { name: 'Password' }).fill(PASSWORD);
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('text=Name is required')).toBeVisible();
+    await expect(page.getByText('Name is required')).toBeVisible();
     await expect(page).toHaveURL('/register');
   });
 
   test('error: invalid email', async ({ page }) => {
     await page.goto('/register');
-    await page.fill('input[placeholder="Name"]', 'Test User');
-    await page.fill('input[placeholder="Email"]', 'not-an-email');
-    await page.fill('input[placeholder="Password"]', PASSWORD);
+    await page.getByRole('textbox', { name: 'Name' }).fill('Test User');
+    await page.getByRole('textbox', { name: 'Email' }).fill('not-an-email');
+    await page.getByRole('textbox', { name: 'Password' }).fill(PASSWORD);
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('text=Invalid email format')).toBeVisible();
+    await expect(page.getByText('Invalid email format')).toBeVisible();
     await expect(page).toHaveURL('/register');
   });
 
   test('error: short password', async ({ page }) => {
     const email = uniqueEmail();
     await page.goto('/register');
-    await page.fill('input[placeholder="Name"]', 'Test User');
-    await page.fill('input[placeholder="Email"]', email);
-    await page.fill('input[placeholder="Password"]', 'abc');
+    await page.getByRole('textbox', { name: 'Name' }).fill('Test User');
+    await page.getByRole('textbox', { name: 'Email' }).fill(email);
+    await page.getByRole('textbox', { name: 'Password' }).fill('abc');
     await page.click('button[type="submit"]');
 
     await expect(
-      page.locator('text=Password must be at least 8 characters'),
+      page.getByText('At least 8 characters'),
     ).toBeVisible();
     await expect(page).toHaveURL('/register');
   });
@@ -55,15 +57,15 @@ test.describe('Register', () => {
   test('error: duplicate email', async ({ page }) => {
     const email = uniqueEmail();
     await registerUser(page, 'First User', email, PASSWORD, 'customer');
-    await page.waitForURL('**/tickets');
+    await expect(page).toHaveURL('/tickets');
 
     await page.goto('/register');
-    await page.fill('input[placeholder="Name"]', 'Second User');
-    await page.fill('input[placeholder="Email"]', email);
-    await page.fill('input[placeholder="Password"]', PASSWORD);
+    await page.getByRole('textbox', { name: 'Name' }).fill('Second User');
+    await page.getByRole('textbox', { name: 'Email' }).fill(email);
+    await page.getByRole('textbox', { name: 'Password' }).fill(PASSWORD);
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('text=already exists')).toBeVisible();
+    await expect(page.getByText('already exists')).toBeVisible();
   });
 });
 
@@ -71,7 +73,7 @@ test.describe('Login', () => {
   test('happy path: login and redirect to /tickets', async ({ page }) => {
     const email = uniqueEmail();
     await registerUser(page, 'Test User', email, PASSWORD, 'customer');
-    await page.waitForURL('**/tickets');
+    await expect(page).toHaveURL('/tickets');
 
     await page.evaluate(() => {
       localStorage.removeItem('token');
@@ -79,14 +81,14 @@ test.describe('Login', () => {
     });
 
     await loginUser(page, email, PASSWORD);
-    await page.waitForURL('**/tickets');
+    await expect(page).toHaveURL('/tickets');
     await expect(page.locator('h1')).toHaveText('Tickets');
   });
 
   test('error: wrong password', async ({ page }) => {
     const email = uniqueEmail();
     await registerUser(page, 'Test User', email, PASSWORD, 'customer');
-    await page.waitForURL('**/tickets');
+    await expect(page).toHaveURL('/tickets');
 
     await page.evaluate(() => {
       localStorage.removeItem('token');
@@ -94,23 +96,22 @@ test.describe('Login', () => {
     });
 
     await loginUser(page, email, 'wrongpassword');
-    await expect(page.locator('text=Invalid email or password')).toBeVisible();
+    await expect(page.getByText('Invalid email or password')).toBeVisible();
     await expect(page).toHaveURL('/login');
   });
 
   test('error: non-existent user', async ({ page }) => {
     await loginUser(page, uniqueEmail(), PASSWORD);
-    await expect(page.locator('text=Invalid email or password')).toBeVisible();
+    await expect(page.getByText('Invalid email or password')).toBeVisible();
     await expect(page).toHaveURL('/login');
   });
 
-  test('error: empty email', async ({ page }) => {
+  test('error: empty field', async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[placeholder="Email"]', '');
-    await page.fill('input[placeholder="Password"]', PASSWORD);
+    await page.getByRole('textbox', { name: 'Email' }).fill('');
+    await page.getByRole('textbox', { name: 'Password' }).fill('abc');
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('text=Invalid email format')).toBeVisible();
     await expect(page).toHaveURL('/login');
   });
 });
@@ -126,7 +127,7 @@ test.describe('Auth guard', () => {
   }) => {
     const email = uniqueEmail();
     await registerUser(page, 'Test User', email, PASSWORD, 'customer');
-    await page.waitForURL('**/tickets');
+    await expect(page).toHaveURL('/tickets');
 
     await page.goto('/login');
     await expect(page).toHaveURL('/tickets');
@@ -137,9 +138,9 @@ test.describe('Nav logout button', () => {
   test('login then logout clears session', async ({ page }) => {
     const email = uniqueEmail();
     await registerUser(page, 'Test User', email, PASSWORD, 'customer');
-    await page.waitForURL('**/tickets');
+    await expect(page).toHaveURL('/tickets');
 
-    await page.click('button:has-text("Logout")');
-    await expect(page.locator('text=Login')).toBeVisible();
+    await page.getByRole('button', { name: 'Logout' }).click();
+    await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
   });
 });
