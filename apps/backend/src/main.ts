@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { closeDb, db } from '@repo/database';
+import { closeDb } from '@repo/database';
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 
@@ -42,7 +42,7 @@ async function bootstrap() {
   const gracefulShutdown = async (signal: string) => {
     console.log(`Received ${signal}, shutting down gracefully...`);
     server.close();
-    closeDb(db);
+    closeDb();
     await app.close();
     process.exit(0);
   };
@@ -51,4 +51,4 @@ async function bootstrap() {
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
-bootstrap();
+await bootstrap();

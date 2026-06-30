@@ -4,25 +4,38 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 
 import * as schema from './schema';
 
-const clientMap = new WeakMap<BetterSQLite3Database<typeof schema>, DatabaseConstructor.Database>();
+let rawDb: DatabaseConstructor.Database | undefined;
+let dbInstance: BetterSQLite3Database<typeof schema> | undefined;
 
 export function createClient(dbPath?: string) {
   const resolvedPath = dbPath ?? ':memory:';
   const sqliteClient = new DatabaseConstructor(resolvedPath);
   sqliteClient.pragma('journal_mode = WAL');
-  const db = drizzle({ client: sqliteClient, schema });
-  clientMap.set(db, sqliteClient);
-  return db;
+  return drizzle({ client: sqliteClient, schema });
 }
 
-export function closeDb(db: BetterSQLite3Database<typeof schema>): void {
-  const client = clientMap.get(db);
-  if (!client) return;
-  client.exec('PRAGMA wal_checkpoint(TRUNCATE)');
-  client.close();
-  clientMap.delete(db);
+export function getDb(): BetterSQLite3Database<typeof schema> {
+  if (!dbInstance) {
+    const defaultPath = process.env.TEST_DATABASE_PATH ?? process.env.DATABASE_PATH ?? ':memory:';
+    rawDb = new DatabaseConstructor(defaultPath);
+    rawDb.pragma('journal_mode = WAL');
+    dbInstance = drizzle({ client: rawDb, schema });
+  }
+  return dbInstance;
 }
 
-const defaultPath = process.env.TEST_DATABASE_PATH ?? process.env.DATABASE_PATH ?? ':memory:';
-export const db = createClient(defaultPath);
+export function closeDb(): void {
+  if (!rawDb) return;
+  rawDb.exec('PRAGMA wal_checkpoint(TRUNCATE)');
+  rawDb.close();
+  rawDb = undefined;
+  dbInstance = undefined;
+}
+
+export const db = new Proxy({} as BetterSQLite3Database<typeof schema>, {
+  get(target, prop, receiver) {
+    return Reflect.get(getDb(), prop, receiver);
+  },
+});
+
 export type DbClient = BetterSQLite3Database<typeof schema>;
