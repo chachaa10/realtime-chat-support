@@ -27,8 +27,12 @@ _Avoid_: Staff, support rep, operator
 Either a Customer or an Agent. The base identity handled by better-auth. Role discriminator: `customer | agent`.
 
 **Ticket Status**:
-One of: `Open` (submitted, awaiting agent), `In Progress` (agent accepted), `Resolved` (agent marked done), `Cancelled` (customer withdrew while ticket was still Open).
+One of: `Open` (submitted, awaiting agent), `In Progress` (agent accepted), `Resolved` (agent marked done), `Cancelled` (customer withdrew while ticket was still Open). States: `open → in_progress → resolved` (terminal), `open → cancelled` (terminal). No reopen from cancelled.
 _Avoid_: Closed, Pending, Awaiting Customer
 
 **Ticket Event**:
 An audit record of a status transition on a ticket. Logs the from/to states, who triggered it, and when. Created for every status change including ticket creation.
+
+**Label**:
+A predefined tag that can be attached to a ticket for categorization and queue filtering. Belongs to a predefined set managed by agents. Many-to-many with tickets via a join table. Optional at ticket creation. Example values: bug, billing, feature-request, account, urgent.
+_Avoid_: Tag, category, priority
