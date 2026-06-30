@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { toast } from 'sonner'
 
 import { getSocket } from '@/lib/socket'
+import { uploadFile } from '@/lib/api/uploads'
 import { useSendMessage } from '../hooks/useSendMessage'
 
 interface MessageInputProps {
@@ -11,7 +13,9 @@ interface MessageInputProps {
 
 export function MessageInput({ ticketId, disabled, disabledReason }: MessageInputProps) {
   const [input, setInput] = useState('')
+  const [uploading, setUploading] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isTypingRef = useRef(false)
   const sendMutation = useSendMessage(ticketId)
@@ -45,21 +49,51 @@ export function MessageInput({ ticketId, disabled, disabledReason }: MessageInpu
     }
   }
 
-  function handleSend() {
+  async function handleSend() {
     const body = input.trim()
-    if (!body || disabled) return
+    if (!body || disabled || uploading) return
 
-    sendMutation.mutate(body, {
-      onSuccess: () => {
-        setInput('')
-        isTypingRef.current = false
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
-        getSocket().emit('typing:stop', { ticketId })
-        if (textareaRef.current) {
-          textareaRef.current.style.height = 'auto'
-        }
+    sendMutation.mutate(
+      { body },
+      {
+        onSuccess: () => {
+          setInput('')
+          isTypingRef.current = false
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+          getSocket().emit('typing:stop', { ticketId })
+          if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto'
+          }
+        },
       },
-    })
+    )
+  }
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File must be smaller than 10MB')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const attachment = await uploadFile(file, ticketId)
+      const body = input.trim()
+      if (body) {
+        sendMutation.mutate({ body, attachmentIds: [attachment.id] })
+        setInput('')
+      } else {
+        sendMutation.mutate({ body: '', attachmentIds: [attachment.id] })
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -77,10 +111,35 @@ export function MessageInput({ ticketId, disabled, disabledReason }: MessageInpu
     }
   }
 
-  const isDisabled = disabled || sendMutation.isPending
+  const isDisabled = disabled || sendMutation.isPending || uploading
 
   return (
     <div className="border-border flex items-end gap-2 border-t p-4">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isDisabled}
+        className="text-ink-muted hover:text-ink mb-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors disabled:opacity-40"
+        aria-label="Attach file"
+      >
+        {uploading ? (
+          <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeDasharray="31.4 31.4" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+        )}
+      </button>
       <div className="relative flex-1">
         <textarea
           ref={textareaRef}
