@@ -14,6 +14,8 @@ vi.mock('@repo/shared', () => {
       BETTER_AUTH_URL: 'http://localhost:3002',
       DATABASE_PATH: dbPath,
     },
+    TICKET_STATUSES: ['open', 'in_progress', 'resolved', 'cancelled'],
+    ROLES: ['customer', 'agent'],
   };
 });
 
@@ -24,7 +26,6 @@ import { AuthModule } from '@thallesp/nestjs-better-auth';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 
-import { DatabaseModule } from '../database/database.module';
 import { auth } from './auth';
 
 let app: INestApplication;
@@ -74,7 +75,6 @@ beforeAll(async () => {
           urlencoded: { enabled: true, extended: true },
         },
       }),
-      DatabaseModule,
     ],
   }).compile();
 

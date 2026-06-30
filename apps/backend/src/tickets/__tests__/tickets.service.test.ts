@@ -29,8 +29,7 @@ import { sql } from 'drizzle-orm';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 import type { AuthenticatedUser } from '../../auth/guards/jwt-auth.guard';
-import { DatabaseModule } from '../../database/database.module';
-import { TicketsGateway } from '../tickets.gateway';
+import { TICKET_BROADCASTER, type TicketBroadcaster } from '../ticket-broadcaster';
 import { TicketsService } from '../tickets.service';
 
 let service: TicketsService;
@@ -136,9 +135,15 @@ beforeAll(async () => {
   );
   db.run(sql`INSERT INTO labels (name, color) VALUES ('billing', '#3b82f6')`);
 
+  const mockBroadcaster: TicketBroadcaster = {
+    ticketCreated: vi.fn(),
+    ticketAccepted: vi.fn(),
+    ticketResolved: vi.fn(),
+    ticketCancelled: vi.fn(),
+  };
+
   const moduleRef: TestingModule = await Test.createTestingModule({
-    imports: [DatabaseModule],
-    providers: [TicketsService, TicketsGateway],
+    providers: [TicketsService, { provide: TICKET_BROADCASTER, useValue: mockBroadcaster }],
   }).compile();
 
   service = moduleRef.get(TicketsService);

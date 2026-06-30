@@ -6,7 +6,6 @@ import { AuthModule } from '@thallesp/nestjs-better-auth';
 import { auth } from './auth/auth';
 import { AppAuthModule } from './auth/auth.module';
 import { UserThrottlerGuard } from './common/guards/user-throttler.guard';
-import { DatabaseModule } from './database/database.module';
 import { TicketsModule } from './tickets/tickets.module';
 
 @Module({
@@ -24,7 +23,6 @@ import { TicketsModule } from './tickets/tickets.module';
       },
     }),
     AppAuthModule,
-    DatabaseModule,
     TicketsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: UserThrottlerGuard }],
