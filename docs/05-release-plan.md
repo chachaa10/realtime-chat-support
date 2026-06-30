@@ -22,23 +22,22 @@
 - CI: GitHub Actions with lint, typecheck, test, build, audit
 - API response contract: success, error, paginated shapes
 
-## Release 2: Real-time Messaging (Not Started)
+## Release 2: Real-time Messaging (Complete)
 
-### Scope
-- Backend Messages module (NestJS)
-- POST /tickets/:id/messages — send a message
+### Delivered
+- Backend Messages module (MessagesService, MessagesController, MessagesModule)
+- POST /tickets/:id/messages — send a message with permission checks
 - GET /tickets/:id/messages — load message history
-- Socket.io room-per-ticket with JWT handshake + authorization
-- Broadcast message:sent to ticket room
-- Permission checks (customer on own ticket, agent on assigned/unassigned)
-- Customer cannot message on resolved/cancelled tickets
-- Frontend chat UI: MessageList + MessageInput
-- Socket.io client with auto-reconnect
-- Auto-scroll on new messages
-- Typing indicator: WS event + broadcast + debounce + UI
-- Agent capacity enforcement: count `in_progress` tickets on accept, block when at limit
-
-### Estimated effort: 1 sprint
+- Socket.io room-per-ticket with cookie-based auth + token fallback
+- join:ticket / leave:ticket event handlers with permission verification
+- Broadcast message:sent to ticket room on every message
+- Permission checks: customer on own ticket, agent on any ticket
+- Customer blocked from sending on resolved/cancelled tickets
+- Frontend chat UI: MessageBubble, MessageList (auto-scroll), MessageInput
+- Socket.io client with WebSocket transport and auto-reconnect
+- Typing indicator: debounced WS event, relay via gateway, UI in MessageList
+- Agent capacity enforcement: count in_progress tickets, reject at max 8
+- 12 integration tests for MessagesService
 
 ## Release 3: File Attachments + UX Polish
 

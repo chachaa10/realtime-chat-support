@@ -31,7 +31,7 @@ Prioritized by business value and dependency order. P0 = must-have for MVP, P1
 - [x] Seed script for development data
 - [x] Graceful shutdown with WAL checkpoint
 
-## P0 — Real-time Messaging (Not Started)
+## P0 — Real-time Messaging (Done)
 
 ### Schema & types — done
 - [x] messages table schema in Drizzle (message-schema.ts)
@@ -39,21 +39,21 @@ Prioritized by business value and dependency order. P0 = must-have for MVP, P1
 - [x] Message, SendMessageInput type exports
 - [x] Drizzle relations defined (messages -> tickets, profiles, attachments)
 
-### Backend — not started
-- [ ] Backend Messages module (controller, service, gateway)
-- [ ] POST /tickets/:id/messages (send a message)
-- [ ] GET /tickets/:id/messages (load history)
-- [ ] Socket.io room-per-ticket with JWT handshake auth
-- [ ] Broadcast message:sent to ticket room
-- [ ] Permission checks: only ticket participants see messages
-- [ ] Customer cannot message on resolved/cancelled tickets
+### Backend — done
+- [x] Backend Messages module (controller, service)
+- [x] POST /tickets/:id/messages (send a message)
+- [x] GET /tickets/:id/messages (load history)
+- [x] Socket.io room-per-ticket with cookie-based + JWT auth
+- [x] Broadcast message:sent to ticket room
+- [x] Permission checks: only ticket participants see messages
+- [x] Customer cannot message on resolved/cancelled tickets
+- [x] Agent capacity enforcement on accept (count `in_progress`, block when at limit)
 
-### Frontend — not started
-- [ ] Frontend chat UI (MessageList + MessageInput components)
-- [ ] Socket.io client with JWT auth and auto-reconnect
-- [ ] Auto-scroll on new message
-- [ ] Typing indicators (WS event + broadcast + UI)
-- [ ] Agent capacity enforcement on accept (count `in_progress`, block when at limit)
+### Frontend — done
+- [x] Frontend chat UI (MessageList + MessageInput + MessageBubble)
+- [x] Socket.io client with WebSocket transport and auto-reconnect
+- [x] Auto-scroll on new messages
+- [x] Typing indicators (debounced WS event + relay + UI)
 
 ## P1 — File Attachments
 
@@ -81,7 +81,7 @@ Prioritized by business value and dependency order. P0 = must-have for MVP, P1
 - [ ] Error states with toast notifications
 - [ ] Token refresh interceptor (auto-refresh on 401)
 - [ ] Connection status indicator (Online / Reconnecting / Offline)
-- [ ] Disable message input on resolved/cancelled tickets
+- [x] Disable message input on resolved/cancelled tickets (in TicketDetail)
 - [ ] Socket.io reconnect:sync handshake
 
 ## P1 — Agent Features
@@ -96,7 +96,6 @@ Prioritized by business value and dependency order. P0 = must-have for MVP, P1
 - [ ] Agent return ticket to queue (in_progress -> open, clear assignment)
 - [ ] Agent availability toggle (Online / Away)
 - [ ] Agent capacity hint on Accept button ("At capacity")
-- [ ] Agent capacity enforcement on accept (count `in_progress`, block when at limit)
 
 ## P1 — Notifications
 
