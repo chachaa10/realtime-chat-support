@@ -8,6 +8,7 @@ import { AppAuthModule } from './auth/auth.module';
 import { UserThrottlerGuard } from './common/guards/user-throttler.guard';
 import { MessagesModule } from './messages/messages.module';
 import { TicketsModule } from './tickets/tickets.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { TicketsModule } from './tickets/tickets.module';
     AppAuthModule,
     TicketsModule,
     MessagesModule,
+    UploadModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: UserThrottlerGuard }],
 })
