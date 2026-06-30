@@ -11,7 +11,6 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { CreateTicketSchema } from '@repo/shared';
-import { Public } from '@thallesp/nestjs-better-auth';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -22,7 +21,6 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { TicketsService } from './tickets.service';
 
 @Controller('tickets')
-@Public()
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}

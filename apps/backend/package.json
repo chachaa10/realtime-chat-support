@@ -12,8 +12,10 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
+    "@nestjs/platform-express": "^11.1.27",
     "@nestjs/throttler": "^6.5.0",
     "@repo/database": "workspace:*",
-    "@repo/shared": "workspace:*"
+    "@repo/shared": "workspace:*",
+    "express": "^5.2.1"
   }
 }

@@ -34,7 +34,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const prev = localStorage.getItem('user');
     const prevUser = prev ? JSON.parse(prev) : {};
     const userWithRole = { ...data.user, role: prevUser.role ?? 'customer' };
-    localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(userWithRole));
     setUser(userWithRole);
   }, []);
@@ -43,7 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (name: string, email: string, password: string, role: 'customer' | 'agent') => {
       const data = await registerApi(name, email, password, role);
       const userWithRole = { ...data.user, role };
-      localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(userWithRole));
       setUser(userWithRole);
     },
@@ -51,7 +49,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
   }, []);

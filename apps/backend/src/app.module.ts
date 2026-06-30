@@ -17,6 +17,7 @@ import { TicketsModule } from './tickets/tickets.module';
     ]),
     AuthModule.forRoot({
       auth,
+      disableGlobalAuthGuard: true,
       bodyParser: {
         json: { limit: '1mb' },
         urlencoded: { enabled: true, extended: true },

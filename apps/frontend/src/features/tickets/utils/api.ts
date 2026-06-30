@@ -4,13 +4,15 @@ const API_BASE =
     : 'http://localhost:3001';
 
 async function fetchApi<T = any>(path: string, options: RequestInit = {}): Promise<{ data: T }> {
-  const token = localStorage.getItem('token');
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+    credentials: 'include',
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error?.message ?? 'Request failed');

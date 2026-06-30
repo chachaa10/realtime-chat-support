@@ -4,17 +4,16 @@ const API_BASE =
     : 'http://localhost:3001';
 
 export async function fetchApi(path: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('token');
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+    credentials: 'include',
+  });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -29,13 +28,13 @@ export async function loginApi(email: string, password: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
+    credentials: 'include',
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.message ?? 'Login failed');
   }
   const data = await res.json();
-  localStorage.setItem('token', data.token);
   localStorage.setItem('user', JSON.stringify(data.user));
   return data;
 }
@@ -50,13 +49,13 @@ export async function registerApi(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, password }),
+    credentials: 'include',
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.message ?? 'Registration failed');
   }
   const data = await res.json();
-  localStorage.setItem('token', data.token);
   localStorage.setItem('user', JSON.stringify({ ...data.user, role: _role }));
   return data;
 }

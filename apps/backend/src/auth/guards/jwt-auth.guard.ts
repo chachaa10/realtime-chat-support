@@ -1,5 +1,6 @@
 import { Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { db, profiles } from '@repo/database';
+import { fromNodeHeaders } from 'better-auth/node';
 import { eq } from 'drizzle-orm';
 import type { Request } from 'express';
 
@@ -16,12 +17,10 @@ export interface AuthenticatedUser {
 export class JwtAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractToken(request);
-    if (!token) return false;
-
     const session = await auth.api.getSession({
-      headers: { authorization: `Bearer ${token}` },
+      headers: fromNodeHeaders(request.headers),
     });
+
     if (!session?.user) return false;
 
     const profileRows = db
@@ -40,11 +39,5 @@ export class JwtAuthGuard implements CanActivate {
 
     (request as any).user = user;
     return true;
-  }
-
-  private extractToken(request: Request): string | null {
-    const header = request.headers.authorization;
-    if (!header?.startsWith('Bearer ')) return null;
-    return header.slice(7);
   }
 }

@@ -3,6 +3,7 @@ import {
   type ArgumentsHost,
   type ExceptionFilter,
   HttpStatus,
+  HttpException,
   Logger,
 } from '@nestjs/common';
 import { type Response, type Request } from 'express';
@@ -28,6 +29,23 @@ export class AppExceptionFilter implements ExceptionFilter {
           code: exception.code,
           message: exception.message,
           ...(exception.errors ? { errors: exception.errors } : {}),
+        },
+      });
+      return;
+    }
+
+    if (exception instanceof HttpException) {
+      const status = exception.getStatus();
+      const res = exception.getResponse();
+      const message =
+        typeof res === 'string' ? res : (res as Record<string, any>).message ?? exception.message;
+      this.logger.warn(
+        `[${correlationId}] ${request.method} ${request.path} → ${status}: ${message}`,
+      );
+      response.status(status).json({
+        error: {
+          code: HttpStatus[status] ?? 'HTTP_ERROR',
+          message: Array.isArray(message) ? message.join('; ') : message,
         },
       });
       return;
