@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchLabels, type LabelData } from '../utils/api';
+import { fetchLabels, type LabelData } from '@/lib/api/tickets';
 
 export function useLabels() {
   return useQuery<LabelData[]>({

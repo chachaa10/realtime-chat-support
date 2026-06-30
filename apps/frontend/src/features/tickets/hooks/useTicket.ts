@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchTicket, type TicketData } from '../utils/api';
+import { fetchTicket, type TicketData } from '@/lib/api/tickets';
 
 export function useTicket(id: number) {
   return useQuery<TicketData>({

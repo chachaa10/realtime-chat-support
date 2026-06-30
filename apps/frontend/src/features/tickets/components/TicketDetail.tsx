@@ -1,7 +1,7 @@
 import { useAuth } from '@/features/auth/context';
+import type { TicketData } from '@/lib/api/tickets';
 
 import { useAcceptTicket, useResolveTicket, useCancelTicket } from '../hooks/useTicketMutations';
-import type { TicketData } from '../utils/api';
 import { TicketStatusBadge } from './TicketStatusBadge';
 
 function formatDate(ts: number) {

@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
-import type { TicketData } from '../utils/api';
+import type { TicketData } from '@/lib/api/tickets';
+
 import { TicketStatusBadge } from './TicketStatusBadge';
 
 function formatTime(ts: number) {

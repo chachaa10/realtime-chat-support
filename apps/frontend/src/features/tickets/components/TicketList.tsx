@@ -1,4 +1,5 @@
-import type { TicketData } from '../utils/api';
+import type { TicketData } from '@/lib/api/tickets';
+
 import { TicketCard } from './TicketCard';
 
 export function TicketList({

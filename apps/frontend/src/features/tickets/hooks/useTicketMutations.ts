@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { createTicket, acceptTicket, resolveTicket, cancelTicket } from '../utils/api';
+import { createTicket, acceptTicket, resolveTicket, cancelTicket } from '@/lib/api/tickets';
 
 export function useCreateTicket() {
   const qc = useQueryClient();

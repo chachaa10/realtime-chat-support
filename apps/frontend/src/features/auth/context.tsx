@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
-import { loginApi, registerApi } from './utils/authClient';
+import * as authApi from '@/lib/api/auth';
 
 interface User {
   id: string;
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const login = useCallback(async (email: string, password: string) => {
-    const data = await loginApi(email, password);
+    const data = await authApi.login(email, password);
     const prev = localStorage.getItem('user');
     const prevUser = prev ? JSON.parse(prev) : {};
     const userWithRole = { ...data.user, role: prevUser.role ?? 'customer' };
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (name: string, email: string, password: string, role: 'customer' | 'agent') => {
-      const data = await registerApi(name, email, password, role);
+      const data = await authApi.register(name, email, password);
       const userWithRole = { ...data.user, role };
       localStorage.setItem('user', JSON.stringify(userWithRole));
       setUser(userWithRole);
