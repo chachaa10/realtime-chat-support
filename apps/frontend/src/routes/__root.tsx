@@ -7,6 +7,8 @@ import {
   useNavigate,
 } from '@tanstack/react-router';
 
+import { Toaster } from 'sonner';
+
 import { ThemeToggle } from '@/design-system/ThemeToggle';
 
 import { useAuth } from '../features/auth/context';
@@ -127,9 +129,14 @@ function RootLayout() {
   const { user } = useAuth();
   const location = useLocation();
 
-  if (!user) {
-    return location.pathname === '/' ? <Outlet /> : <AuthLayout />;
-  }
-
-  return <AppShell />;
+  return (
+    <>
+      <Toaster richColors closeButton position="top-right" />
+      {!user
+        ? location.pathname === '/'
+          ? <Outlet />
+          : <AuthLayout />
+        : <AppShell />}
+    </>
+  );
 }

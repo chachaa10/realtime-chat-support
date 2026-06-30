@@ -65,6 +65,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     credentials: 'include',
   });
 
+  if (res.status === 401) {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+    throw new ApiError('Session expired', 'UNAUTHORIZED', 401);
+  }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const errBody = body.error ?? body;
