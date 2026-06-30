@@ -7,18 +7,14 @@ export const ticketEvents = sqliteTable(
   'ticket_events',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    ticketId: integer('ticket_id')
-      .notNull()
-      .references(tickets.id),
+    ticketId: integer('ticket_id').notNull().references(tickets.id),
     fromStatus: text('from_status', {
       enum: ['open', 'in_progress', 'resolved', 'cancelled'],
     }),
     toStatus: text('to_status', {
       enum: ['open', 'in_progress', 'resolved', 'cancelled'],
     }).notNull(),
-    actorId: text('actor_id')
-      .notNull()
-      .references(profiles.id),
+    actorId: text('actor_id').notNull().references(profiles.id),
     reason: text('reason'),
     createdAt: integer('created_at').notNull(),
   },

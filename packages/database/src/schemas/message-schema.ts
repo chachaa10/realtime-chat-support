@@ -7,12 +7,8 @@ export const messages = sqliteTable(
   'messages',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    ticketId: integer('ticket_id')
-      .notNull()
-      .references(tickets.id),
-    authorId: text('author_id')
-      .notNull()
-      .references(profiles.id),
+    ticketId: integer('ticket_id').notNull().references(tickets.id),
+    authorId: text('author_id').notNull().references(profiles.id),
     body: text('body').notNull(),
     createdAt: integer('created_at').notNull(),
   },

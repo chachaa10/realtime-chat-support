@@ -31,9 +31,7 @@ export const sessions = sqliteTable(
       .notNull(),
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
-    userId: text('user_id')
-      .notNull()
-      .references(users.id, { onDelete: 'cascade' }),
+    userId: text('user_id').notNull().references(users.id, { onDelete: 'cascade' }),
   },
   (table) => [index('sessions_userId_idx').on(table.userId)],
 );
@@ -44,9 +42,7 @@ export const accounts = sqliteTable(
     id: text('id').primaryKey(),
     accountId: text('account_id').notNull(),
     providerId: text('provider_id').notNull(),
-    userId: text('user_id')
-      .notNull()
-      .references(users.id, { onDelete: 'cascade' }),
+    userId: text('user_id').notNull().references(users.id, { onDelete: 'cascade' }),
     accessToken: text('access_token'),
     refreshToken: text('refresh_token'),
     idToken: text('id_token'),

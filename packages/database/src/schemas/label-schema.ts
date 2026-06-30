@@ -11,12 +11,8 @@ export const labels = sqliteTable('labels', {
 export const ticketLabels = sqliteTable(
   'ticket_labels',
   {
-    ticketId: integer('ticket_id')
-      .notNull()
-      .references(tickets.id),
-    labelId: integer('label_id')
-      .notNull()
-      .references(labels.id),
+    ticketId: integer('ticket_id').notNull().references(tickets.id),
+    labelId: integer('label_id').notNull().references(labels.id),
   },
   (table) => [primaryKey({ columns: [table.ticketId, table.labelId] })],
 );

@@ -1,7 +1,7 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 
 import { eq, sql } from 'drizzle-orm';
 import { describe, it, expect } from 'vitest';
@@ -9,8 +9,15 @@ import { describe, it, expect } from 'vitest';
 import { createClient } from '../client';
 import { runMigrations } from '../migrate';
 import {
-  users, sessions, accounts, verifications,
-  profiles, tickets, ticketEvents, labels, ticketLabels,
+  users,
+  sessions,
+  accounts,
+  verifications,
+  profiles,
+  tickets,
+  ticketEvents,
+  labels,
+  ticketLabels,
 } from '../schema';
 
 describe('database migrations', () => {
