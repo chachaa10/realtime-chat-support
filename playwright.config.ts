@@ -11,6 +11,8 @@ export default defineConfig({
     headless: true,
     actionTimeout: 5000,
   },
+  globalSetup: './e2e/global-setup.ts',
+  globalTeardown: './e2e/global-teardown.ts',
   webServer: [
     {
       command:
