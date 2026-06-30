@@ -25,6 +25,7 @@
     "ci:full": "pnpm ci:check && pnpm test:e2e",
     "clean": "pnpm --filter backend exec rm -rf dist .cache && pnpm --filter frontend exec rm -rf dist .cache && pnpm --filter @repo/shared exec rm -rf dist .cache && pnpm --filter @repo/database exec rm -rf dist .cache",
     "setup": "pnpm install && turbo build && pnpm db:push",
+    "dev": "turbo run dev --parallel",
     "dev:backend": "pnpm --filter backend dev",
     "dev:frontend": "pnpm --filter frontend dev",
     "db:generate": "pnpm --filter @repo/database exec drizzle-kit generate",
