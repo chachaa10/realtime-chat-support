@@ -12,6 +12,7 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
+    "@nestjs/throttler": "^6.5.0",
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*"
   }
