@@ -2,7 +2,11 @@ import { useAuth } from '@/features/auth/context';
 import type { TicketData } from '@/lib/api/tickets';
 
 import { useAcceptTicket, useResolveTicket, useCancelTicket } from '../hooks/useTicketMutations';
+import { useMessages } from '../hooks/useMessages';
+import { useTypingIndicator } from '../hooks/useTypingIndicator';
 import { TicketStatusBadge } from './TicketStatusBadge';
+import { MessageList } from './MessageList';
+import { MessageInput } from './MessageInput';
 
 function formatDate(ts: number) {
   return new Date(ts).toLocaleString();
@@ -14,6 +18,9 @@ export function TicketDetail({ ticket }: { ticket: TicketData }) {
   const resolveMutation = useResolveTicket();
   const cancelMutation = useCancelTicket();
 
+  const { data: messages, isLoading: messagesLoading } = useMessages(ticket.id);
+  const typingIndicator = useTypingIndicator(ticket.id);
+
   const isCustomer = user?.role === 'customer';
   const isAgent = user?.role === 'agent';
   const isOwnTicket = isCustomer && ticket.customerId === user?.id;
@@ -23,8 +30,11 @@ export function TicketDetail({ ticket }: { ticket: TicketData }) {
   const canResolve = isAssignedAgent && ticket.status === 'in_progress';
   const canCancel = isOwnTicket && ticket.status === 'open';
 
+  const isResolvedOrCancelled = ticket.status === 'resolved' || ticket.status === 'cancelled';
+  const inputDisabled = isCustomer && isResolvedOrCancelled;
+
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-ink text-[1.25rem] font-semibold">{ticket.subject}</h1>
@@ -89,6 +99,22 @@ export function TicketDetail({ ticket }: { ticket: TicketData }) {
             {cancelMutation.isPending ? 'Cancelling...' : 'Cancel Ticket'}
           </button>
         )}
+      </div>
+
+      <div className="border-border bg-surface-raised flex h-96 flex-col rounded-xl border">
+        <div className="border-border px-4 py-2.5">
+          <p className="text-ink text-[0.8125rem] font-medium">Conversation</p>
+        </div>
+        <MessageList
+          messages={messages}
+          isLoading={messagesLoading}
+          typingIndicator={typingIndicator}
+        />
+        <MessageInput
+          ticketId={ticket.id}
+          disabled={inputDisabled}
+          disabledReason={isResolvedOrCancelled ? 'This ticket is closed' : undefined}
+        />
       </div>
     </div>
   );
