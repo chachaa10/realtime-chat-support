@@ -2,6 +2,7 @@ import { defineRelations } from 'drizzle-orm';
 
 import { attachments } from './schemas/attachment-schema';
 import { users, sessions, accounts, verifications } from './schemas/auth-schema';
+import { labels, ticketLabels } from './schemas/label-schema';
 import { messages } from './schemas/message-schema';
 import { profiles } from './schemas/profile-schema';
 import { ticketEvents } from './schemas/ticket-event-schema';
@@ -17,6 +18,8 @@ export {
   messages,
   attachments,
   ticketEvents,
+  labels,
+  ticketLabels,
 };
 
 export const relations = defineRelations(
@@ -30,6 +33,8 @@ export const relations = defineRelations(
     messages,
     attachments,
     ticketEvents,
+    labels,
+    ticketLabels,
   },
   (r) => ({
     users: {
@@ -91,6 +96,10 @@ export const relations = defineRelations(
         from: r.tickets.id,
         to: r.ticketEvents.ticketId,
       }),
+      labels: r.many.ticketLabels({
+        from: r.tickets.id,
+        to: r.ticketLabels.ticketId,
+      }),
     },
     messages: {
       ticket: r.one.tickets({
@@ -128,6 +137,22 @@ export const relations = defineRelations(
       actor: r.one.profiles({
         from: r.ticketEvents.actorId,
         to: r.profiles.id,
+      }),
+    },
+    labels: {
+      tickets: r.many.ticketLabels({
+        from: r.labels.id,
+        to: r.ticketLabels.labelId,
+      }),
+    },
+    ticketLabels: {
+      ticket: r.one.tickets({
+        from: r.ticketLabels.ticketId,
+        to: r.tickets.id,
+      }),
+      label: r.one.labels({
+        from: r.ticketLabels.labelId,
+        to: r.labels.id,
       }),
     },
   }),
