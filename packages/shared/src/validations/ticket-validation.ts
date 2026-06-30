@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
-export const TicketStatus = z.enum(['open', 'in_progress', 'resolved', 'cancelled'], {
+import { TICKET_STATUSES } from '../constants';
+
+export const TicketStatus = z.enum(TICKET_STATUSES, {
   error: 'Status must be one of: open, in_progress, resolved, cancelled',
 });
 

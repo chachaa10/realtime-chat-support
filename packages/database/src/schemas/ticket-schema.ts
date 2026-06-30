@@ -1,3 +1,4 @@
+import { TICKET_STATUSES } from '@repo/shared';
 import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 
 import { profiles } from './profile-schema';
@@ -9,7 +10,7 @@ export const tickets = sqliteTable(
     subject: text('subject').notNull(),
     description: text('description').notNull(),
     status: text('status', {
-      enum: ['open', 'in_progress', 'resolved', 'cancelled'],
+      enum: TICKET_STATUSES as unknown as [string, ...string[]],
     })
       .notNull()
       .default('open'),

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { ROLES } from '../constants';
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_RULES } from './password-rules';
 
 export const LoginSchema = z.object({
@@ -31,5 +32,5 @@ export const RegisterSchema = z.object({
     .refine((v) => PASSWORD_RULES.every((r) => r.test(v)), {
       message: 'Password does not meet all requirements',
     }),
-  role: z.enum(['customer', 'agent'], { error: 'Role must be either customer or agent' }),
+  role: z.enum(ROLES, { error: 'Role must be either customer or agent' }),
 });
