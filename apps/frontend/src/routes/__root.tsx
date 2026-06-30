@@ -13,9 +13,9 @@ import { useAuth } from '../features/auth/context';
 
 export const rootRoute = createRootRoute({
   beforeLoad: ({ location }) => {
-    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
     if (
-      !token &&
+      !user &&
       location.pathname !== '/' &&
       location.pathname !== '/login' &&
       location.pathname !== '/register'

@@ -38,7 +38,7 @@ export class AppExceptionFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const res = exception.getResponse();
       const message =
-        typeof res === 'string' ? res : (res as Record<string, any>).message ?? exception.message;
+        typeof res === 'string' ? res : ((res as Record<string, any>).message ?? exception.message);
       this.logger.warn(
         `[${correlationId}] ${request.method} ${request.path} → ${status}: ${message}`,
       );

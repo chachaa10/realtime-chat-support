@@ -17,7 +17,7 @@ export const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
   beforeLoad: () => {
-    if (localStorage.getItem('token')) {
+    if (localStorage.getItem('user')) {
       throw redirect({ to: '/' });
     }
   },
