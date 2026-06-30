@@ -31,7 +31,7 @@
     "db:generate": "pnpm --filter @repo/database exec drizzle-kit generate",
     "db:migrate": "pnpm --filter @repo/database exec drizzle-kit migrate",
     "db:push": "pnpm --filter @repo/database exec drizzle-kit push",
-    "db:reset": "rm -f data.db && pnpm --filter @repo/database exec drizzle-kit push",
+    "db:reset": "tsx scripts/db-reset.ts",
     "db:seed": "pnpm --filter @repo/shared build && pnpm --filter @repo/database exec tsx src/seed.ts",
     "db:studio": "pnpm --filter @repo/database exec drizzle-kit studio",
     "prepare": "husky"
