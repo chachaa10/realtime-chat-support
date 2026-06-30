@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockAll = vi.hoisted(() => vi.fn());
+const mockOrderBy = vi.hoisted(() => vi.fn(() => ({ all: mockAll })));
 const mockLimit = vi.hoisted(() => vi.fn(() => ({ all: mockAll })));
-const mockWhere = vi.hoisted(() => vi.fn(() => ({ limit: mockLimit })));
+const mockWhere = vi.hoisted(() => vi.fn(() => ({ orderBy: mockOrderBy, limit: mockLimit })));
 const mockFrom = vi.hoisted(() => vi.fn(() => ({ where: mockWhere })));
 const mockSelect = vi.hoisted(() => vi.fn(() => ({ from: mockFrom })));
 
@@ -13,7 +14,7 @@ vi.mock('../../auth/auth', () => ({
 }));
 
 vi.mock('@repo/database', () => {
-  return { db: { select: mockSelect }, profiles: { id: 'profiles' }, schema: {} };
+  return { db: { select: mockSelect }, profiles: { id: 'profiles' }, tickets: { id: 'tickets' }, messages: { ticketId: 'messages.ticketId', createdAt: 'messages.createdAt' }, schema: {} };
 });
 
 import { TicketsGateway } from '../tickets.gateway';
@@ -192,6 +193,47 @@ describe('TicketsGateway', () => {
       gateway.handleDisconnect(client);
     });
   });
+
+  describe('reconnect:sync', () => {
+    it('emits missed messages since timestamp', () => {
+      mockAll.mockReturnValueOnce([
+        { id: 1, customerId: 'cust-1', agentId: null, status: 'open' },
+      ]);
+      mockAll.mockReturnValueOnce([
+        { id: 2, ticketId: 1, authorId: 'agent-1', body: 'Missed message', createdAt: 2000 },
+      ]);
+
+      const client = makeClient();
+      (client as any).userId = 'cust-1';
+      (client as any).role = 'customer';
+      client.emit = vi.fn();
+
+      const gateway = new TicketsGateway();
+      gateway.server = { to: vi.fn(() => ({ emit: vi.fn() })) } as any;
+
+      gateway.handleReconnectSync(client, { ticketId: 1, lastMessageTimestamp: 1000 });
+
+      expect(client.emit).toHaveBeenCalledWith('reconnect:sync', {
+        messages: [{ id: 2, ticketId: 1, authorId: 'agent-1', body: 'Missed message', createdAt: 2000 }],
+      });
+    });
+
+    it('does nothing for non-participant user', () => {
+      mockAll.mockReturnValueOnce([
+        { id: 1, customerId: 'other-cust', agentId: null, status: 'open' },
+      ]);
+
+      const client = makeClient();
+      (client as any).userId = 'cust-1';
+      (client as any).role = 'customer';
+      client.emit = vi.fn();
+
+      const gateway = new TicketsGateway();
+      gateway.handleReconnectSync(client, { ticketId: 1, lastMessageTimestamp: 1000 });
+
+      expect(client.emit).not.toHaveBeenCalled();
+    });
+  })
 
   describe('broadcast methods with null server', () => {
     it('ticketCreated handles null server gracefully', () => {

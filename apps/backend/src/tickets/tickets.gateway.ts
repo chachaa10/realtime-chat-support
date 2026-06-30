@@ -7,8 +7,8 @@ import {
   type OnGatewayConnection,
   type OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { db, profiles, tickets } from '@repo/database';
-import { eq } from 'drizzle-orm';
+import { db, profiles, tickets, messages } from '@repo/database';
+import { eq, and, gt, asc } from 'drizzle-orm';
 import { Server, Socket } from 'socket.io';
 import type { Message } from '@repo/shared';
 
@@ -144,6 +144,49 @@ export class TicketsGateway
       ticketId: payload.ticketId,
       userId,
     });
+  }
+
+  @SubscribeMessage('reconnect:sync')
+  handleReconnectSync(
+    client: Socket,
+    payload: { ticketId: number; lastMessageTimestamp: number },
+  ) {
+    const { ticketId, lastMessageTimestamp } = payload;
+    const userId = (client as any).userId;
+
+    if (!userId) return;
+
+    // Check ticket access
+    const ticketRows = db
+      .select()
+      .from(tickets)
+      .where(eq(tickets.id, ticketId))
+      .limit(1)
+      .all() as { id: number; customerId: string; agentId: string | null }[];
+
+    if (ticketRows.length === 0) return;
+
+    const ticket = ticketRows[0];
+
+    // Verify user is a participant
+    const role = (client as any).role;
+    if (role === 'customer' && ticket.customerId !== userId) return;
+    if (role === 'agent' && ticket.agentId !== userId && ticket.agentId !== null) return;
+
+    // Fetch missed messages
+    const missedMessages = db
+      .select()
+      .from(messages)
+      .where(
+        and(
+          eq(messages.ticketId, ticketId),
+          gt(messages.createdAt, lastMessageTimestamp),
+        ),
+      )
+      .orderBy(asc(messages.createdAt))
+      .all() as { id: number; ticketId: number; authorId: string; body: string; createdAt: number }[];
+
+    client.emit('reconnect:sync', { messages: missedMessages });
   }
 
   // --- TicketBroadcaster ---
