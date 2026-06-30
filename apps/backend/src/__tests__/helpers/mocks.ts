@@ -8,6 +8,8 @@ export const mockDb = (): Record<string, any> => {
       tickets: { findFirst: fn(), findMany: fn() },
       messages: { findFirst: fn(), findMany: fn() },
       attachments: { findFirst: fn(), findMany: fn() },
+      labels: { findFirst: fn(), findMany: fn() },
+      ticketLabels: { findFirst: fn(), findMany: fn() },
     },
     insert: fn(),
     update: fn(),
