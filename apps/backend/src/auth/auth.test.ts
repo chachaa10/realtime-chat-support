@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
+import { unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 vi.mock('@repo/shared', () => {
   const dbPath = join(tmpdir(), `test-${randomUUID()}.db`);
+  process.env.DATABASE_PATH = dbPath;
   return {
     env: {
       PORT: 3002,
@@ -17,7 +19,7 @@ vi.mock('@repo/shared', () => {
 
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { db } from '@repo/database';
+import { closeDb, db } from '@repo/database';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
@@ -83,6 +85,15 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await app?.close();
+  closeDb();
+  const dbPath = process.env.DATABASE_PATH;
+  if (dbPath && dbPath !== ':memory:') {
+    try {
+      unlinkSync(dbPath);
+    } catch {
+      // ignore if already deleted
+    }
+  }
 });
 
 describe('POST /api/auth/sign-up/email', () => {
