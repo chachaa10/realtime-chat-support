@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  Inject,
 } from '@nestjs/common';
 import { CreateTicketSchema } from '@repo/shared';
 
@@ -23,7 +24,7 @@ import { TicketsService } from './tickets.service';
 @Controller('tickets')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TicketsController {
-  constructor(private readonly ticketsService: TicketsService) {}
+  constructor(@Inject(TicketsService) private readonly ticketsService: TicketsService) {}
 
   @Post()
   @Roles('customer')

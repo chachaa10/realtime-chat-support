@@ -1,24 +1,31 @@
-import { Injectable, Optional, Inject, type ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common';
+
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+
+const store = new Map<string, RateLimitEntry>();
 
 @Injectable()
-export class UserThrottlerGuard extends ThrottlerGuard {
-  constructor(
-    options: any,
-    storageService: any,
-    @Optional() @Inject(Reflector) reflector?: typeof Reflector,
-  ) {
-    super(options, storageService, reflector ?? new Reflector());
-  }
-
-  protected getTracker(req: Record<string, any>): Promise<string> {
-    return Promise.resolve(req.user?.id ?? req.ip);
-  }
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+export class UserThrottlerGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
+
     if (request.path?.startsWith('/api/auth/')) return true;
-    return super.canActivate(context);
+
+    const key = request.user?.id ?? request.ip;
+    const now = Date.now();
+    const entry = store.get(key);
+
+    if (!entry || now > entry.resetAt) {
+      store.set(key, { count: 1, resetAt: now + 60_000 });
+      return true;
+    }
+
+    if (entry.count >= 100) return false;
+
+    entry.count++;
+    return true;
   }
 }

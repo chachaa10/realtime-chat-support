@@ -1,4 +1,4 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { db, tickets, ticketLabels, labels, profiles } from '@repo/database';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 
@@ -41,10 +41,7 @@ export interface LabelRow {
 
 @Injectable()
 export class TicketsService {
-  constructor(
-    @Inject(forwardRef(() => TicketsGateway))
-    private readonly gateway: TicketsGateway,
-  ) {}
+  constructor(@Inject(TicketsGateway) private readonly gateway: TicketsGateway) {}
 
   create(user: AuthenticatedUser, input: CreateTicketInput) {
     if (user.role !== 'customer') {

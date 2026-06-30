@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, Inject } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -8,7 +8,7 @@ import { TicketsService } from './tickets.service';
 @Controller('labels')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class LabelsController {
-  constructor(private readonly ticketsService: TicketsService) {}
+  constructor(@Inject(TicketsService) private readonly ticketsService: TicketsService) {}
 
   @Get()
   @Roles('customer', 'agent')
