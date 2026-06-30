@@ -65,7 +65,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     credentials: 'include',
   });
 
-  if (res.status === 401) {
+  if (res.status === 401 && !path.startsWith('/api/auth/')) {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     window.location.href = '/login';
