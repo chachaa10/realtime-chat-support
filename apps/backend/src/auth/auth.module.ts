@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 
+import { AuthService } from './auth.service';
 import { ProfileHook } from './profile.hook';
 
 @Module({
-  providers: [ProfileHook],
+  providers: [AuthService, ProfileHook],
+  exports: [AuthService],
 })
 export class AppAuthModule {}

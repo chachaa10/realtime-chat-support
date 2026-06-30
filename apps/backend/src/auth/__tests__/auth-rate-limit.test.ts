@@ -13,6 +13,8 @@ vi.mock('@repo/shared', () => {
       BETTER_AUTH_URL: 'http://localhost:3099',
       DATABASE_PATH: dbPath,
     },
+    TICKET_STATUSES: ['open', 'in_progress', 'resolved', 'cancelled'],
+    ROLES: ['customer', 'agent'],
   };
 });
 
