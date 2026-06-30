@@ -22,7 +22,7 @@
 - CI: GitHub Actions with lint, typecheck, test, build, audit
 - API response contract: success, error, paginated shapes
 
-## Release 2: Real-time Messaging (Current Sprint)
+## Release 2: Real-time Messaging (Not Started)
 
 ### Scope
 - Backend Messages module (NestJS)
