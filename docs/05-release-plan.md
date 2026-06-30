@@ -39,19 +39,26 @@
 - Agent capacity enforcement: count in_progress tickets, reject at max 8
 - 12 integration tests for MessagesService
 
-## Release 3: File Attachments + UX Polish
+## Release 3: File Attachments + UX Polish (Complete)
 
-### Scope
-- POST /uploads — multipart upload with 10MB limit and MIME validation
-- GET /uploads/:id — guarded file serving
-- Frontend file picker, image preview, upload progress
-- Token refresh interceptor
-- Connection status indicator
-- Loading/empty/error states (skeletons, toasts)
-- Socket.io reconnect:sync handshake
-- Disable input on resolved tickets
-
-### Estimated effort: 1 sprint
+### Delivered
+- FileStorage port/adapter with LocalFileStorage (saves to `uploads/`)
+- MIME validation by magic bytes (rejects executables/scripts)
+- POST /uploads — multipart upload with 10MB limit, returns attachment object
+- GET /uploads/:id — guarded file serving with ticket membership check
+- Upload module registered in AppModule with DI
+- Message attachment linking: `sendMessage` accepts `attachmentIds`, links orphan attachments
+- Enriched message responses include `attachments[]` via `MessageWithAttachments` type
+- Socket.io `reconnect:sync` handshake: server returns missed messages since timestamp
+- Frontend upload API wrapper with XHR progress tracking
+- File picker in chat input, image preview inline, other files as download links
+- Connection status indicator (Online/Reconnecting/Offline)
+- Toast notification system (sonner) with error toasts on mutations
+- 401 session expiry handling: clear state + redirect to login (excludes auth endpoints)
+- Reconnect:sync on frontend: emits on socket `connect` when cache has messages
+- Loading/empty/error states on MessageList and chat views
+- 13 integration tests for FileStorage, upload controller, attachment linking, and gateway
+- All CI checks passing (lint, typecheck, test, build, E2E)
 
 ## Release 4: Agent Features + Notifications
 

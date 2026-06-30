@@ -55,34 +55,28 @@ Prioritized by business value and dependency order. P0 = must-have for MVP, P1
 - [x] Auto-scroll on new messages
 - [x] Typing indicators (debounced WS event + relay + UI)
 
-## P1 — File Attachments
+## P1 — File Attachments (Done)
 
-### Storage layer — done
 - [x] FileStorage interface (port/adapter pattern)
 - [x] LocalFileStorage implementation (writes to uploads/)
 - [x] Attachment DB schema (attachments table with FK to messages and tickets)
 - [x] AttachmentSchema in @repo/shared
+- [x] POST /uploads — multipart upload, 10MB limit, MIME validation
+- [x] GET /uploads/:id — guarded file serving with ticket membership check
+- [x] Frontend file picker in chat input
+- [x] Image preview inline; other files as download links
+- [x] Upload-first flow: upload via POST /uploads, upload token, attach attachmentId to message
 
-### Endpoints & frontend — not started
-- [ ] POST /uploads — multipart upload, 10MB limit, MIME validation
-- [ ] GET /uploads/:id — guarded file serving with ticket membership check
-- [ ] Frontend file picker in chat input
-- [ ] Image preview inline; other files as download links
-- [ ] Upload-first flow: upload via POST /uploads, upload token, attach attachmentId to message
+## P1 — UX Polish (Done)
 
-## P1 — UX Polish
-
-### Partially done
 - [x] Loading skeleton on ticket detail page
-
-### Not started
-- [ ] Loading states on ticket list and chat
-- [ ] Empty states (no tickets, no messages)
-- [ ] Error states with toast notifications
-- [ ] Token refresh interceptor (auto-refresh on 401)
-- [ ] Connection status indicator (Online / Reconnecting / Offline)
+- [x] Loading states on ticket list and chat
+- [x] Empty states (no tickets, no messages)
+- [x] Error states with toast notifications
+- [x] Token refresh interceptor (auto-refresh on 401)
+- [x] Connection status indicator (Online / Reconnecting / Offline)
 - [x] Disable message input on resolved/cancelled tickets (in TicketDetail)
-- [ ] Socket.io reconnect:sync handshake
+- [x] Socket.io reconnect:sync handshake
 
 ## P1 — Agent Features
 

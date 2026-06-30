@@ -58,20 +58,20 @@ _Acceptance:_ When an agent has accepted the ticket, a chat interface appears.
 Messages sent by either party appear in real-time without page refresh.
 When the agent is typing, a typing indicator is shown below the message input.
 
-**C-9: Send files in chat** 🚧
+**C-9: Send files in chat** ✅
 As a customer, I want to attach files (images, documents) to my messages so
 that I can share relevant information.
 _Acceptance:_ File picker button in the message input. Selected files are
 uploaded and attached to the message. Images appear inline; other files show as
 download links.
 
-**C-10: See connection status** 🚧
+**C-10: See connection status** ✅
 As a customer, I want to see my real-time connection status so that I know if
 my messages are being delivered.
 _Acceptance:_ Status indicator in the chat UI showing Online, Reconnecting, or
 Offline.
 
-**C-11: Cannot message on resolved tickets** 🚧
+**C-11: Cannot message on resolved tickets** ✅
 As a customer, I want the message input to be disabled when the ticket is
 resolved or cancelled so that I know the conversation is over.
 _Acceptance:_ Message input is disabled with a "Ticket is resolved" message.
@@ -176,7 +176,7 @@ _Acceptance:_ "Resolve" button on the ticket detail page (visible only to the
 assigned agent). On click, status changes to `resolved`, both customer and
 agent pool are notified.
 
-**A-11: Send files in chat** 🚧
+**A-11: Send files in chat** ✅
 As an agent, I want to attach files to my messages so that I can share
 screenshots, documentation, or other resources.
 _Acceptance:_ Same upload mechanism as customer-facing chat.
