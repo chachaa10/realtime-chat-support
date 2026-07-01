@@ -7,6 +7,7 @@ import { auth } from './auth/auth';
 import { AppAuthModule } from './auth/auth.module';
 import { UserThrottlerGuard } from './common/guards/user-throttler.guard';
 import { MessagesModule } from './messages/messages.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { UploadModule } from './upload/upload.module';
 
@@ -27,6 +28,7 @@ import { UploadModule } from './upload/upload.module';
     AppAuthModule,
     TicketsModule,
     MessagesModule,
+    NotificationsModule,
     UploadModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: UserThrottlerGuard }],

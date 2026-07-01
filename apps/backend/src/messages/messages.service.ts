@@ -1,11 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { db, tickets, messages, attachments } from '@repo/database';
+import { db, tickets, messages, attachments, notifications as notificationsTable } from '@repo/database';
 import { eq, and, asc, inArray } from 'drizzle-orm';
 import type { Message } from '@repo/shared';
 
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { NotFoundError, ForbiddenError } from '../common/errors';
 import { MESSAGE_BROADCASTER, type MessageBroadcaster } from './message-broadcaster';
+import { NOTIFICATION_BROADCASTER, type NotificationBroadcaster } from '../notifications/notification-broadcaster';
 
 interface TicketRow {
   id: number
@@ -34,6 +35,7 @@ export interface MessageWithAttachments extends Message {
 export class MessagesService {
   constructor(
     @Inject(MESSAGE_BROADCASTER) private readonly broadcaster: MessageBroadcaster,
+    @Inject(NOTIFICATION_BROADCASTER) private readonly notificationBroadcaster: NotificationBroadcaster,
   ) {}
 
   getMessages(ticketId: number, user: AuthenticatedUser): MessageWithAttachments[] {
@@ -92,6 +94,17 @@ export class MessagesService {
 
     const enriched = this.enrichWithAttachments([message])[0]
     this.broadcaster.messageSent(ticketId, enriched)
+
+    const otherUserId = user.id === ticket.customerId ? ticket.agentId : ticket.customerId
+    if (otherUserId) {
+      const notifNow = Date.now()
+      const notifRows = db
+        .insert(notificationsTable)
+        .values({ userId: otherUserId, type: 'new_message', ticketId, message: `New message on ticket #${ticketId}`, createdAt: notifNow } as any)
+        .returning()
+        .all()
+      this.notificationBroadcaster.notificationCreated(otherUserId, notifRows[0])
+    }
 
     return enriched
   }
