@@ -16,7 +16,11 @@ function isImage(mimeType: string) {
   return mimeType.startsWith('image/')
 }
 
-function AttachmentImage({ attachmentId, fileName }: { attachmentId: number; fileName: string }) {
+function isVideo(mimeType: string) {
+  return mimeType.startsWith('video/')
+}
+
+function AttachmentPreview({ attachmentId, fileName, mimeType }: { attachmentId: number; fileName: string; mimeType: string }) {
   const [url, setUrl] = useState<string | null>(null)
   const [error, setError] = useState(false)
   const [open, setOpen] = useState(false)
@@ -64,15 +68,30 @@ function AttachmentImage({ attachmentId, fileName }: { attachmentId: number; fil
     return <div className="h-24 w-48 animate-pulse rounded-lg bg-ink/10" />
   }
 
+  const video = isVideo(mimeType)
+
   return (
     <>
-      <button onClick={() => setOpen(true)} className="block cursor-pointer p-0 border-0 bg-transparent">
-        <img
-          src={url}
-          alt={fileName}
-          className="max-h-48 max-w-full rounded-lg object-cover"
-          loading="lazy"
-        />
+      <button onClick={() => setOpen(true)} className="group relative block cursor-pointer p-0 border-0 bg-transparent">
+        {video ? (
+          <>
+            <video src={url} className="max-h-48 max-w-full rounded-lg object-cover" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 group-hover:bg-black/60 transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="none">
+                  <polygon points="8 5 19 12 8 19 8 5" />
+                </svg>
+              </div>
+            </div>
+          </>
+        ) : (
+          <img
+            src={url}
+            alt={fileName}
+            className="max-h-48 max-w-full rounded-lg object-cover"
+            loading="lazy"
+          />
+        )}
       </button>
       {open && (
         <div
@@ -80,11 +99,20 @@ function AttachmentImage({ attachmentId, fileName }: { attachmentId: number; fil
           onClick={close}
         >
           <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={url}
-              alt={fileName}
-              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
-            />
+            {video ? (
+              <video
+                src={url}
+                className="max-h-[90vh] max-w-[90vw] rounded-lg"
+                controls
+                autoPlay
+              />
+            ) : (
+              <img
+                src={url}
+                alt={fileName}
+                className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+              />
+            )}
             <button
               onClick={close}
               className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink/80 text-white hover:bg-ink transition-colors"
@@ -176,8 +204,8 @@ export function MessageBubble({ message, isOwn, authorName }: MessageBubbleProps
         {message.attachments.length > 0 && (
           <div className="mt-2 space-y-1.5">
             {message.attachments.map((att) =>
-              isImage(att.mimeType) ? (
-                <AttachmentImage key={att.id} attachmentId={att.id} fileName={att.fileName} />
+              isImage(att.mimeType) || isVideo(att.mimeType) ? (
+                <AttachmentPreview key={att.id} attachmentId={att.id} fileName={att.fileName} mimeType={att.mimeType} />
               ) : (
                 <a
                   key={att.id}
