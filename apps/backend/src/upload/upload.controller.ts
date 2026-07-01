@@ -73,7 +73,7 @@ export class UploadController {
       throw new ValidationError('ticketId is required and must be a number')
     }
 
-    const mimeType = detectMimeType(file.buffer)
+    const mimeType = detectMimeType(file.buffer, file.mimetype)
     if (!mimeType || !isAllowedMimeType(mimeType)) {
       throw new ValidationError('File type is not allowed')
     }

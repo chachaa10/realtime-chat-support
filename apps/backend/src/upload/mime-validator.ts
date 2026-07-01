@@ -25,13 +25,13 @@ const MAGIC_SIGNATURES: Array<{ mime: string; bytes: number[]; offset?: number }
   { mime: 'image/svg+xml', bytes: [0x3c, 0x73, 0x76, 0x67] }, // <svg
   { mime: 'application/pdf', bytes: [0x25, 0x50, 0x44, 0x46] },
   { mime: 'video/mp4', bytes: [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70], offset: 4 }, // ftyp box
-  { mime: 'text/plain', bytes: [] }, // no magic, fallback
+  { mime: 'video/webm', bytes: [0x1a, 0x45, 0xdf, 0xa3] }, // EBML header
+  { mime: 'application/zip', bytes: [0x50, 0x4b, 0x03, 0x04] }, // shared by docx, xlsx, etc.
 ]
 
-export function detectMimeType(buffer: Buffer): string | null {
+export function detectMimeType(buffer: Buffer, multerMime?: string): string | null {
   for (const sig of MAGIC_SIGNATURES) {
     const offset = sig.offset ?? 0
-    if (sig.bytes.length === 0) continue
     if (buffer.length < offset + sig.bytes.length) continue
     const match = sig.bytes.every((b, i) => buffer[offset + i] === b)
     if (match) {
@@ -41,8 +41,17 @@ export function detectMimeType(buffer: Buffer): string | null {
         if (webpId === 'WEBP') return 'image/webp'
         continue
       }
+      // For ZIP-based formats, defer to multer's MIME for subtype (docx vs xlsx)
+      if (sig.mime === 'application/zip' && multerMime && isAllowedMimeType(multerMime)) {
+        return multerMime
+      }
       return sig.mime
     }
+  }
+  // Fallback: accept multer's MIME if it's in the allowed list
+  // This handles text/plain, text/csv, and other formats without unique magic signatures
+  if (multerMime && isAllowedMimeType(multerMime)) {
+    return multerMime
   }
   return null
 }
