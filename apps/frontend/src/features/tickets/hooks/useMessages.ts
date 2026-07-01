@@ -64,6 +64,7 @@ export function useMessages(ticketId: number) {
     socket.on('ticket:accepted', handleTicketStatusChange)
     socket.on('ticket:resolved', handleTicketStatusChange)
     socket.on('ticket:cancelled', handleTicketStatusChange)
+    socket.on('ticket:returned', handleTicketStatusChange)
 
     socket.on('connect', () => {
       const cached = queryClient.getQueryData<MessageWithAttachments[]>(['messages', ticketId])
@@ -83,6 +84,7 @@ export function useMessages(ticketId: number) {
       socket.off('ticket:accepted', handleTicketStatusChange)
       socket.off('ticket:resolved', handleTicketStatusChange)
       socket.off('ticket:cancelled', handleTicketStatusChange)
+      socket.off('ticket:returned', handleTicketStatusChange)
       socket.off('connect')
       socket.off('connect_error')
       socket.emit('leave:ticket', { ticketId })

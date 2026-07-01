@@ -1,12 +1,14 @@
 import { useAuth } from '@/features/auth/context'
 import type { TicketData } from '@/lib/api/tickets'
 
-import { useAcceptTicket, useResolveTicket, useCancelTicket } from '../hooks/useTicketMutations'
+import { useAcceptTicket, useResolveTicket, useCancelTicket, useReturnToQueue } from '../hooks/useTicketMutations'
 import { useMessages } from '../hooks/useMessages'
 import { useTypingIndicator } from '../hooks/useTypingIndicator'
+import { useAgentCapacity } from '../hooks/useAgentCapacity'
 import { MessageList } from './MessageList'
 import { MessageInput } from './MessageInput'
 import { ConnectionStatus } from './ConnectionStatus'
+import { TicketTimeline } from './TicketTimeline'
 
 function formatDate(ts: number) {
   return new Date(ts).toLocaleString()
@@ -21,18 +23,23 @@ export function TicketConversation({ ticket }: TicketConversationProps) {
   const acceptMutation = useAcceptTicket()
   const resolveMutation = useResolveTicket()
   const cancelMutation = useCancelTicket()
+  const returnMutation = useReturnToQueue()
 
   const { data: messages, isLoading: messagesLoading, isError: messagesError, refetch: refetchMessages } = useMessages(ticket.id)
   const typingIndicator = useTypingIndicator(ticket.id)
+  const { data: capacity } = useAgentCapacity()
 
   const isCustomer = user?.role === 'customer'
   const isAgent = user?.role === 'agent'
   const isOwnTicket = isCustomer && ticket.customerId === user?.id
   const isAssignedAgent = isAgent && ticket.agentId === user?.id
 
+  const isAway = user?.status === 'away'
+  const atCapacity = capacity?.atCapacity ?? false
   const canAccept = isAgent && ticket.status === 'open'
   const canResolve = isAssignedAgent && ticket.status === 'in_progress'
   const canCancel = isOwnTicket && ticket.status === 'open'
+  const canReturn = isAssignedAgent && ticket.status === 'in_progress'
 
   const isResolvedOrCancelled = ticket.status === 'resolved' || ticket.status === 'cancelled'
   const inputDisabled = isCustomer && isResolvedOrCancelled
@@ -70,10 +77,17 @@ export function TicketConversation({ ticket }: TicketConversationProps) {
           {canAccept && (
             <button
               onClick={() => acceptMutation.mutate(ticket.id)}
-              disabled={acceptMutation.isPending}
+              disabled={acceptMutation.isPending || isAway || atCapacity}
+              title={isAway ? 'You are away' : atCapacity ? 'At capacity' : undefined}
               className="bg-brand text-primary-foreground hover:bg-brand-hover inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[0.8125rem] font-medium transition-colors disabled:opacity-50"
             >
-              {acceptMutation.isPending ? 'Accepting...' : 'Accept'}
+              {acceptMutation.isPending
+                ? 'Accepting...'
+                : isAway
+                  ? 'You are away'
+                  : atCapacity
+                    ? 'At capacity'
+                    : 'Accept'}
             </button>
           )}
           {canResolve && (
@@ -83,6 +97,15 @@ export function TicketConversation({ ticket }: TicketConversationProps) {
               className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-success px-3 text-[0.8125rem] font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
             >
               {resolveMutation.isPending ? 'Resolving...' : 'Resolve'}
+            </button>
+          )}
+          {canReturn && (
+            <button
+              onClick={() => returnMutation.mutate(ticket.id)}
+              disabled={returnMutation.isPending}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-transparent px-3 text-[0.8125rem] font-medium text-ink-muted transition-colors hover:text-ink hover:bg-surface disabled:opacity-50"
+            >
+              {returnMutation.isPending ? 'Returning...' : 'Return to queue'}
             </button>
           )}
           {canCancel && (
@@ -129,6 +152,8 @@ export function TicketConversation({ ticket }: TicketConversationProps) {
           Agent assigned to this ticket
         </div>
       )}
+
+      <TicketTimeline ticketId={ticket.id} role={isAgent ? 'agent' : 'customer'} />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <MessageList

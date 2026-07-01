@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { createTicket, acceptTicket, resolveTicket, cancelTicket } from '@/lib/api/tickets';
+import { createTicket, acceptTicket, resolveTicket, cancelTicket, returnTicketToQueue } from '@/lib/api/tickets';
 
 export function useCreateTicket() {
   const qc = useQueryClient();
@@ -58,6 +58,21 @@ export function useCancelTicket() {
     },
     onError: (err: Error) => {
       toast.error(err.message ?? 'Failed to cancel ticket');
+    },
+  });
+}
+
+export function useReturnToQueue() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: returnTicketToQueue,
+    onSuccess: (ticket) => {
+      qc.invalidateQueries({ queryKey: ['tickets'] });
+      qc.invalidateQueries({ queryKey: ['ticket', ticket.id] });
+      toast.success('Ticket returned to queue');
+    },
+    onError: (err: Error) => {
+      toast.error(err.message ?? 'Failed to return ticket to queue');
     },
   });
 }

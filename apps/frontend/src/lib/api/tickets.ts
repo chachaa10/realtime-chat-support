@@ -59,6 +59,33 @@ export function cancelTicket(id: number): Promise<TicketData> {
   return patch<TicketData>(`/tickets/${id}/cancel`);
 }
 
+export function returnTicketToQueue(id: number): Promise<TicketData> {
+  return patch<TicketData>(`/tickets/${id}/return-to-queue`);
+}
+
+export interface EventData {
+  id: number;
+  ticketId: number;
+  fromStatus: string | null;
+  toStatus: string;
+  actorId: string;
+  createdAt: number;
+}
+
+export function fetchTicketEvents(id: number): Promise<EventData[]> {
+  return get<EventData[]>(`/tickets/${id}/events`);
+}
+
+export interface CapacityStatus {
+  inProgressCount: number;
+  maxCapacity: number;
+  atCapacity: boolean;
+}
+
+export function fetchCapacityStatus(): Promise<CapacityStatus> {
+  return get<CapacityStatus>('/tickets/capacity-status');
+}
+
 export function fetchLabels(): Promise<LabelData[]> {
   return get<LabelData[]>('/labels');
 }
