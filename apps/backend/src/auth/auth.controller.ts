@@ -71,4 +71,25 @@ export class AuthController {
 
     return { data: { id: user.id, name: user.name, email: user.email, role } }
   }
+
+  @Patch('profile/availability')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('agent')
+  async updateAvailability(
+    @Body() body: { status: string },
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const { status } = body
+
+    if (status !== 'online' && status !== 'away') {
+      throw new ValidationError('Status must be online or away')
+    }
+
+    db.update(profiles)
+      .set({ status })
+      .where(eq(profiles.id, user.id))
+      .run()
+
+    return { data: { status } }
+  }
 }
