@@ -105,23 +105,23 @@ _Done._
 
 ## P2 — Backend Hardening
 
-_Not started._
+_Done._
 
-- [ ] Cursor-based pagination for ticket lists
-- [ ] Pagination for message history
-- [ ] Orphan attachment cleanup (cron: unattached > 1 hour)
-- [ ] Age-based attachment cleanup (cron: older than 30 days)
-- [ ] Per-user daily upload cap (50MB)
-- [ ] Rate limit response headers (X-RateLimit-Remaining, X-RateLimit-Reset)
-- [ ] Range header support on file serving for video seeking
+- [x] Cursor-based pagination for ticket lists
+- [x] Pagination for message history
+- [x] Orphan attachment cleanup (cron: unattached > 1 hour)
+- [x] Age-based attachment cleanup (cron: older than 30 days)
+- [x] Per-user daily upload cap (50MB)
+- [x] Rate limit response headers (X-RateLimit-Remaining, X-RateLimit-Reset)
+- [x] Range header support on file serving for video seeking
 
 ## P2 — Frontend Polish
 
-_Not started._
+_Done._
 
-- [ ] Responsive mobile layout
-- [ ] Agent dashboard: queue sorting
-- [ ] Upload progress indicator
+- [x] Responsive mobile layout
+- [x] Agent dashboard: queue sorting
+- [x] Upload progress indicator
 
 ## P2 — Deploy & Docs
 

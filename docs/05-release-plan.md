@@ -84,19 +84,23 @@
 - Frontend: customer ticket event timeline (simplified)
 - All CI checks passing: 121 tests across 10 test files, typecheck clean
 
-## Release 5: Backend Hardening + Frontend Polish
+## Release 5: Backend Hardening + Frontend Polish (Complete)
 
-### Scope
+### Delivered
 
-- Cursor-based pagination for tickets and messages
-- Orphan and age-based attachment cleanup (cron jobs)
-- Per-user daily upload cap
-- Rate limit response headers
-- Range header support for video
-- Responsive mobile layout
-- Agent dashboard sorting
-
-### Estimated effort: 1 sprint
+- Backend: cursor-based pagination for tickets API (cursor/limit query params)
+- Backend: cursor-based pagination for messages API (cursor/limit query params)
+- Backend: orphan attachment cleanup (cron: hourly, unattached > 1 hour)
+- Backend: age-based attachment cleanup (cron: daily at midnight, older than 30 days)
+- Backend: per-user daily upload cap (50MB, checked before save)
+- Backend: rate limit response headers (X-RateLimit-Remaining, X-RateLimit-Reset)
+- Backend: Range header support on file serving (206 Partial Content for video seeking)
+- Backend: label filter moved to SQL (enables correct cursor pagination with labels)
+- Backend: ticket sort parameter (newest/oldest/status) for agents
+- Frontend: responsive mobile layout (collapsible sidebar overlay, hamburger menu)
+- Frontend: agent queue sort dropdown (Newest/Oldest/Status)
+- Frontend: upload progress bar on file attachment
+- All CI checks passing (120 tests, typecheck, build clean)
 
 ## Release 6: Deploy
 
