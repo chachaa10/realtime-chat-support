@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { createRoute } from '@tanstack/react-router';
 
 import { Skeleton, SkeletonText, SkeletonMessage, ErrorState } from '@/components/ui';
 import { TicketConversation } from '@/features/tickets/components/TicketConversation';
 import { useTicket } from '@/features/tickets/hooks/useTicket';
+import { useMarkNotificationsReadByTicket } from '@/features/notifications/hooks/useNotifications';
 
 import { ticketsRoute } from './index';
 
@@ -16,6 +18,13 @@ function TicketDetailPage() {
   const { ticketId } = ticketDetailRoute.useParams();
   const id = Number(ticketId);
   const { data: ticket, isLoading, isRefetching, error, refetch } = useTicket(id);
+  const markReadByTicket = useMarkNotificationsReadByTicket();
+
+  useEffect(() => {
+    if (id) {
+      markReadByTicket.mutate(id);
+    }
+  }, [id]);
 
   if (isLoading) {
     return (

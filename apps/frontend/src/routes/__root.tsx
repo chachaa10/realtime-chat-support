@@ -11,6 +11,8 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { RouteLoadingBar } from '../components/route-loading-bar';
 import { useAuth } from '../features/auth/context';
 import { useTheme } from '../features/theme/ThemeContext';
+import { useNotificationSocket } from '../features/notifications/hooks/useNotificationSocket';
+import { useTabTitle } from '../features/notifications/hooks/useTabTitle';
 
 export const rootRoute = createRootRoute({
   beforeLoad: ({ location }) => {
@@ -28,6 +30,9 @@ export const rootRoute = createRootRoute({
 });
 
 function AppShell() {
+  useNotificationSocket();
+  useTabTitle();
+
   return (
     <div className="flex h-dvh">
       <main className="bg-surface flex-1 overflow-hidden">
