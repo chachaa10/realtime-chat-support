@@ -10,11 +10,12 @@ import {
   Body,
   Inject,
   Res,
+  Req,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { db, attachments, tickets } from '@repo/database'
-import { eq } from 'drizzle-orm'
-import type { Response } from 'express'
+import { eq, and, sql } from 'drizzle-orm'
+import type { Request, Response } from 'express'
 import { createReadStream, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -77,6 +78,26 @@ export class UploadController {
       throw new ValidationError('File type is not allowed')
     }
 
+    const todayStart = new Date()
+    todayStart.setUTCHours(0, 0, 0, 0)
+    const todayStartMs = todayStart.getTime()
+
+    const [{ total }] = db
+      .select({ total: sql<number>`COALESCE(SUM(file_size), 0)` })
+      .from(attachments)
+      .where(
+        and(
+          eq(attachments.uploaderId, user.id),
+          sql`created_at >= ${todayStartMs}`,
+        ),
+      )
+      .all() as { total: number }[]
+
+    const dailyCap = 50 * 1024 * 1024
+    if ((total ?? 0) + file.size > dailyCap) {
+      throw new ValidationError('Daily upload limit of 50MB exceeded')
+    }
+
     const now = Date.now()
 
     const filePath = this.fileStorage.save(file.originalname, file.buffer)
@@ -118,6 +139,7 @@ export class UploadController {
   async serve(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthenticatedUser,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
     const rows = db
@@ -151,11 +173,39 @@ export class UploadController {
     const fullPath = join(process.cwd(), 'uploads', attachment.filePath)
     if (!existsSync(fullPath)) throw new NotFoundError('File not found on disk')
 
-    res.setHeader('Content-Type', attachment.mimeType)
-    res.setHeader('Content-Length', attachment.fileSize.toString())
-    res.setHeader('Content-Disposition', `inline; filename="${attachment.fileName}"`)
+    const fileSize = attachment.fileSize
+    res.setHeader('Accept-Ranges', 'bytes')
 
-    const stream = createReadStream(fullPath)
-    stream.pipe(res)
+    const range = req.headers.range
+
+    if (range && range.startsWith('bytes=')) {
+      const parts = range.replace(/bytes=/, '').split('-')
+      const start = parseInt(parts[0], 10)
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1
+
+      if (start >= fileSize) {
+        res.status(416)
+        res.setHeader('Content-Range', `bytes */${fileSize}`)
+        res.end()
+        return
+      }
+
+      const chunkSize = end - start + 1
+      res.status(206)
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`)
+      res.setHeader('Content-Length', chunkSize.toString())
+      res.setHeader('Content-Type', attachment.mimeType)
+      res.setHeader('Content-Disposition', `inline; filename="${attachment.fileName}"`)
+
+      const stream = createReadStream(fullPath, { start, end })
+      stream.pipe(res)
+    } else {
+      res.setHeader('Content-Type', attachment.mimeType)
+      res.setHeader('Content-Length', fileSize.toString())
+      res.setHeader('Content-Disposition', `inline; filename="${attachment.fileName}"`)
+
+      const stream = createReadStream(fullPath)
+      stream.pipe(res)
+    }
   }
 }

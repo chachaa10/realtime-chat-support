@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { FILE_STORAGE } from './file-storage'
 import { LocalFileStorage } from './local-file-storage'
 import { UploadController } from './upload.controller'
+import { CleanupService } from './cleanup.service'
 
 const uploadDir = join(process.cwd(), 'uploads')
 if (!existsSync(uploadDir)) {
@@ -18,6 +19,7 @@ if (!existsSync(uploadDir)) {
       provide: FILE_STORAGE,
       useFactory: () => new LocalFileStorage(uploadDir),
     },
+    CleanupService,
   ],
   exports: [FILE_STORAGE],
 })
