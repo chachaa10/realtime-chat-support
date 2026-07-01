@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 
 import type { MessageWithAttachments } from '@/lib/api/messages'
 import { fetchAttachmentAsBlob } from '@/lib/api/uploads'
@@ -19,6 +19,7 @@ function isImage(mimeType: string) {
 function AttachmentImage({ attachmentId, fileName }: { attachmentId: number; fileName: string }) {
   const [url, setUrl] = useState<string | null>(null)
   const [error, setError] = useState(false)
+  const [open, setOpen] = useState(false)
   const revokeRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -38,6 +39,17 @@ function AttachmentImage({ attachmentId, fileName }: { attachmentId: number; fil
     }
   }, [attachmentId])
 
+  const close = useCallback(() => setOpen(false), [])
+
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open])
+
   if (error) {
     return (
       <a href={`${API_BASE}/uploads/${attachmentId}`} target="_blank" rel="noopener noreferrer"
@@ -53,12 +65,40 @@ function AttachmentImage({ attachmentId, fileName }: { attachmentId: number; fil
   }
 
   return (
-    <img
-      src={url}
-      alt={fileName}
-      className="max-h-48 max-w-full rounded-lg object-cover"
-      loading="lazy"
-    />
+    <>
+      <button onClick={() => setOpen(true)} className="block cursor-pointer p-0 border-0 bg-transparent">
+        <img
+          src={url}
+          alt={fileName}
+          className="max-h-48 max-w-full rounded-lg object-cover"
+          loading="lazy"
+        />
+      </button>
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          onClick={close}
+        >
+          <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={url}
+              alt={fileName}
+              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+            />
+            <button
+              onClick={close}
+              className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink/80 text-white hover:bg-ink transition-colors"
+              aria-label="Close"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
