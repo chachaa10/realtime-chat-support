@@ -30,6 +30,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 
 import type { AuthenticatedUser } from '../../auth/guards/jwt-auth.guard'
 import { MESSAGE_BROADCASTER, type MessageBroadcaster } from '../message-broadcaster'
+import { NOTIFICATION_BROADCASTER } from '../../notifications/notification-broadcaster'
 import { MessagesService } from '../messages.service'
 
 let service: MessagesService
@@ -83,6 +84,7 @@ function createTables() {
     )`,
     `CREATE TABLE IF NOT EXISTS profiles (
       id text PRIMARY KEY, role text NOT NULL,
+      status text NOT NULL DEFAULT 'online',
       created_at integer NOT NULL
     )`,
     `CREATE TABLE IF NOT EXISTS tickets (
@@ -118,6 +120,15 @@ function createTables() {
       uploader_id text NOT NULL REFERENCES profiles(id),
       file_name text NOT NULL, file_size integer NOT NULL,
       mime_type text NOT NULL, file_path text NOT NULL,
+      created_at integer NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS notifications (
+      id integer PRIMARY KEY AUTOINCREMENT,
+      user_id text NOT NULL REFERENCES profiles(id),
+      type text NOT NULL,
+      ticket_id integer NOT NULL REFERENCES tickets(id),
+      message text NOT NULL,
+      is_read integer NOT NULL DEFAULT 0,
       created_at integer NOT NULL
     )`,
   ]
@@ -179,7 +190,11 @@ beforeAll(async () => {
   }
 
   const moduleRef: TestingModule = await Test.createTestingModule({
-    providers: [MessagesService, { provide: MESSAGE_BROADCASTER, useValue: mockBroadcaster }],
+    providers: [
+      MessagesService,
+      { provide: MESSAGE_BROADCASTER, useValue: mockBroadcaster },
+      { provide: NOTIFICATION_BROADCASTER, useValue: { notificationCreated: vi.fn() } },
+    ],
   }).compile()
 
   service = moduleRef.get(MessagesService)

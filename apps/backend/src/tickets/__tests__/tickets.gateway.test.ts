@@ -110,7 +110,7 @@ describe('TicketsGateway', () => {
       await gateway.handleConnection(client);
       expect((client as any).userId).toBe('cust-1');
       expect((client as any).role).toBe('customer');
-      expect(client.join).not.toHaveBeenCalled();
+      expect(client.join).toHaveBeenCalledWith('user:cust-1');
     });
 
     it('joins agents room for agent role', async () => {

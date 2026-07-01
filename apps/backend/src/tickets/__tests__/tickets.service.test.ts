@@ -30,6 +30,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 import type { AuthenticatedUser } from '../../auth/guards/jwt-auth.guard';
 import { TICKET_BROADCASTER, type TicketBroadcaster } from '../ticket-broadcaster';
+import { NOTIFICATION_BROADCASTER } from '../../notifications/notification-broadcaster';
 import { TicketsService } from '../tickets.service';
 
 let service: TicketsService;
@@ -90,6 +91,7 @@ function createTables() {
     )`,
     `CREATE TABLE IF NOT EXISTS profiles (
       id text PRIMARY KEY, role text NOT NULL,
+      status text NOT NULL DEFAULT 'online',
       created_at integer NOT NULL
     )`,
     `CREATE TABLE IF NOT EXISTS tickets (
@@ -113,6 +115,15 @@ function createTables() {
       ticket_id integer NOT NULL REFERENCES tickets(id),
       label_id integer NOT NULL REFERENCES labels(id),
       PRIMARY KEY (ticket_id, label_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS notifications (
+      id integer PRIMARY KEY AUTOINCREMENT,
+      user_id text NOT NULL REFERENCES profiles(id),
+      type text NOT NULL,
+      ticket_id integer NOT NULL REFERENCES tickets(id),
+      message text NOT NULL,
+      is_read integer NOT NULL DEFAULT 0,
+      created_at integer NOT NULL
     )`,
   ];
   for (const s of stmts) db.run(s);
@@ -140,10 +151,15 @@ beforeAll(async () => {
     ticketAccepted: vi.fn(),
     ticketResolved: vi.fn(),
     ticketCancelled: vi.fn(),
+    ticketReturnedToQueue: vi.fn(),
   };
 
   const moduleRef: TestingModule = await Test.createTestingModule({
-    providers: [TicketsService, { provide: TICKET_BROADCASTER, useValue: mockBroadcaster }],
+    providers: [
+      TicketsService,
+      { provide: TICKET_BROADCASTER, useValue: mockBroadcaster },
+      { provide: NOTIFICATION_BROADCASTER, useValue: { notificationCreated: vi.fn() } },
+    ],
   }).compile();
 
   service = moduleRef.get(TicketsService);
@@ -247,6 +263,13 @@ describe('accept', () => {
     const overflow = service.create(otherCustomer, { subject: 'Overflow', description: 'X' })
     expect(() => service.accept(overflow.id, otherAgent)).toThrow('capacity limit')
   });
+
+  it('rejects accept when agent is away', () => {
+    db.run(sql`UPDATE profiles SET status = 'away' WHERE id = ${agent.id}`);
+    const ticket = service.create(customer, { subject: 'Away test', description: 'X' });
+    expect(() => service.accept(ticket.id, agent)).toThrow('away');
+    db.run(sql`UPDATE profiles SET status = 'online' WHERE id = ${agent.id}`);
+  });
 });
 
 describe('resolve', () => {
@@ -302,6 +325,46 @@ describe('cancel', () => {
     service.accept(ticket.id, agent);
     service.resolve(ticket.id, agent);
     expect(() => service.cancel(ticket.id, customer)).toThrow(/not open/);
+  });
+});
+
+describe('returnToQueue', () => {
+  it('assigned agent can return an in_progress ticket to queue', () => {
+    const ticket = service.create(customer, { subject: 'Return me', description: 'Please' });
+    service.accept(ticket.id, agent);
+    const returned = service.returnToQueue(ticket.id, agent);
+    expect(returned.status).toBe('open');
+    expect(returned.agentId).toBeNull();
+  });
+
+  it('non-assigned agent cannot return a ticket', () => {
+    const ticket = service.create(customer, { subject: 'Not mine', description: 'Nope' });
+    service.accept(ticket.id, agent);
+    expect(() => service.returnToQueue(ticket.id, otherAgent)).toThrow(
+      'You can only return your own tickets',
+    );
+  });
+
+  it('cannot return an open ticket', () => {
+    const ticket = service.create(customer, { subject: 'Fresh', description: 'New' });
+    expect(() => service.returnToQueue(ticket.id, agent)).toThrow(/not in_progress/);
+  });
+
+  it('cannot return a resolved ticket', () => {
+    const ticket = service.create(customer, { subject: 'Done', description: 'Finished' });
+    service.accept(ticket.id, agent);
+    service.resolve(ticket.id, agent);
+    expect(() => service.returnToQueue(ticket.id, agent)).toThrow(/not in_progress/);
+  });
+
+  it('customer cannot return a ticket', () => {
+    const ticket = service.create(customer, { subject: 'No return', description: 'By customer' });
+    service.accept(ticket.id, agent);
+    expect(() => service.returnToQueue(ticket.id, customer)).toThrow('Only agents can return tickets');
+  });
+
+  it('throws NotFoundError for non-existent ticket', () => {
+    expect(() => service.returnToQueue(999999, agent)).toThrow('Ticket not found');
   });
 });
 
@@ -433,5 +496,41 @@ describe('create with labelIds', () => {
       labelIds: [999999],
     });
     expect(ticket.id).toBeGreaterThan(0);
+  });
+});
+
+describe('getEvents', () => {
+  it('returns events for a ticket', () => {
+    const ticket = service.create(customer, { subject: 'Event test', description: 'X' });
+    service.accept(ticket.id, agent);
+    service.resolve(ticket.id, agent);
+    const events = service.getEvents(ticket.id, customer);
+    expect(events.length).toBeGreaterThanOrEqual(3);
+    expect(events[0]).toMatchObject({ ticketId: ticket.id, toStatus: 'open' });
+  });
+
+  it('customer can only see their own ticket events', () => {
+    const ticket = service.create(otherCustomer, { subject: 'Private', description: 'X' });
+    expect(() => service.getEvents(ticket.id, customer)).toThrow(
+      'You can only view your own tickets',
+    );
+  });
+
+  it('agent can see any ticket events', () => {
+    const ticket = service.create(customer, { subject: 'Agent view', description: 'X' });
+    const events = service.getEvents(ticket.id, agent);
+    expect(events.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('returns events ordered by created_at asc', () => {
+    const ticket = service.create(customer, { subject: 'Order test', description: 'X' });
+    const events = service.getEvents(ticket.id, agent);
+    for (let i = 1; i < events.length; i++) {
+      expect(events[i].createdAt).toBeGreaterThanOrEqual(events[i - 1].createdAt);
+    }
+  });
+
+  it('throws NotFoundError for non-existent ticket', () => {
+    expect(() => service.getEvents(999999, customer)).toThrow('Ticket not found');
   });
 });
