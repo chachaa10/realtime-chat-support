@@ -9,6 +9,7 @@ import { MessageList } from './MessageList'
 import { MessageInput } from './MessageInput'
 import { ConnectionStatus } from './ConnectionStatus'
 import { TicketTimeline } from './TicketTimeline'
+import { TicketActionsPopover } from './TicketActionsPopover'
 
 function formatDate(ts: number) {
   return new Date(ts).toLocaleString()
@@ -100,13 +101,12 @@ export function TicketConversation({ ticket }: TicketConversationProps) {
             </button>
           )}
           {canReturn && (
-            <button
-              onClick={() => returnMutation.mutate(ticket.id)}
+            <TicketActionsPopover
+              ticketId={ticket.id}
               disabled={returnMutation.isPending}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-transparent px-3 text-[0.8125rem] font-medium text-ink-muted transition-colors hover:text-ink hover:bg-surface disabled:opacity-50"
-            >
-              {returnMutation.isPending ? 'Returning...' : 'Return to queue'}
-            </button>
+              isPending={returnMutation.isPending}
+              onReturn={() => returnMutation.mutate(ticket.id)}
+            />
           )}
           {canCancel && (
             <button
