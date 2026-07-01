@@ -20,20 +20,36 @@ function isVideo(mimeType: string) {
   return mimeType.startsWith('video/')
 }
 
+function isPdf(mimeType: string) {
+  return mimeType === 'application/pdf'
+}
+
+function isText(mimeType: string) {
+  return mimeType.startsWith('text/')
+}
+
+function isPreviewable(mimeType: string) {
+  return isImage(mimeType) || isVideo(mimeType) || isPdf(mimeType) || isText(mimeType)
+}
+
 function AttachmentPreview({ attachmentId, fileName, mimeType }: { attachmentId: number; fileName: string; mimeType: string }) {
   const [url, setUrl] = useState<string | null>(null)
+  const [textContent, setTextContent] = useState<string | null>(null)
   const [error, setError] = useState(false)
   const [open, setOpen] = useState(false)
   const revokeRef = useRef<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    fetchAttachmentAsBlob(attachmentId).then((blob) => {
+    fetchAttachmentAsBlob(attachmentId).then(async (blob) => {
       if (cancelled) return
       const objectUrl = URL.createObjectURL(blob)
       if (revokeRef.current) URL.revokeObjectURL(revokeRef.current)
       revokeRef.current = objectUrl
       setUrl(objectUrl)
+      if (isText(mimeType)) {
+        setTextContent(await blob.text())
+      }
     }).catch(() => {
       if (!cancelled) setError(true)
     })
@@ -41,7 +57,7 @@ function AttachmentPreview({ attachmentId, fileName, mimeType }: { attachmentId:
       cancelled = true
       if (revokeRef.current) URL.revokeObjectURL(revokeRef.current)
     }
-  }, [attachmentId])
+  }, [attachmentId, mimeType])
 
   const close = useCallback(() => setOpen(false), [])
 
@@ -69,29 +85,92 @@ function AttachmentPreview({ attachmentId, fileName, mimeType }: { attachmentId:
   }
 
   const video = isVideo(mimeType)
+  const pdf = isPdf(mimeType)
+  const text = isText(mimeType)
+
+  function renderThumbnail() {
+    if (video) {
+      return (
+        <>
+          <video src={url} className="max-h-48 max-w-full rounded-lg object-cover" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 group-hover:bg-black/60 transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="none">
+                <polygon points="8 5 19 12 8 19 8 5" />
+              </svg>
+            </div>
+          </div>
+        </>
+      )
+    }
+
+    if (pdf || text) {
+      return (
+        <div className="flex items-center gap-2 rounded-lg bg-ink/5 px-3 py-3 text-[0.8125rem]">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-ink">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          <span className="truncate text-ink">{fileName}</span>
+        </div>
+      )
+    }
+
+    return (
+      <img
+        src={url}
+        alt={fileName}
+        className="max-h-48 max-w-full rounded-lg object-cover"
+        loading="lazy"
+      />
+    )
+  }
+
+  function renderModal() {
+    if (video) {
+      return (
+        <video
+          src={url}
+          className="max-h-[90vh] max-w-[90vw] rounded-lg"
+          controls
+          autoPlay
+        />
+      )
+    }
+
+    if (pdf) {
+      return (
+        <iframe
+          src={url}
+          className="h-[90vh] w-[90vw] rounded-lg"
+          title={fileName}
+        />
+      )
+    }
+
+    if (text) {
+      return (
+        <pre className="max-h-[80vh] max-w-[80vw] overflow-auto rounded-lg bg-[#1e1e2e] p-6 text-[0.8125rem] text-[#cdd6f4] whitespace-pre-wrap">
+          {textContent ?? 'Loading...'}
+        </pre>
+      )
+    }
+
+    return (
+      <img
+        src={url}
+        alt={fileName}
+        className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+      />
+    )
+  }
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="group relative block cursor-pointer p-0 border-0 bg-transparent">
-        {video ? (
-          <>
-            <video src={url} className="max-h-48 max-w-full rounded-lg object-cover" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 group-hover:bg-black/60 transition-colors">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="none">
-                  <polygon points="8 5 19 12 8 19 8 5" />
-                </svg>
-              </div>
-            </div>
-          </>
-        ) : (
-          <img
-            src={url}
-            alt={fileName}
-            className="max-h-48 max-w-full rounded-lg object-cover"
-            loading="lazy"
-          />
-        )}
+      <button onClick={() => setOpen(true)} className="group relative block cursor-pointer p-0 border-0 bg-transparent w-full text-left">
+        {renderThumbnail()}
       </button>
       {open && (
         <div
@@ -99,20 +178,7 @@ function AttachmentPreview({ attachmentId, fileName, mimeType }: { attachmentId:
           onClick={close}
         >
           <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
-            {video ? (
-              <video
-                src={url}
-                className="max-h-[90vh] max-w-[90vw] rounded-lg"
-                controls
-                autoPlay
-              />
-            ) : (
-              <img
-                src={url}
-                alt={fileName}
-                className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
-              />
-            )}
+            {renderModal()}
             <button
               onClick={close}
               className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink/80 text-white hover:bg-ink transition-colors"
@@ -204,7 +270,7 @@ export function MessageBubble({ message, isOwn, authorName }: MessageBubbleProps
         {message.attachments.length > 0 && (
           <div className="mt-2 space-y-1.5">
             {message.attachments.map((att) =>
-              isImage(att.mimeType) || isVideo(att.mimeType) ? (
+              isPreviewable(att.mimeType) ? (
                 <AttachmentPreview key={att.id} attachmentId={att.id} fileName={att.fileName} mimeType={att.mimeType} />
               ) : (
                 <a
