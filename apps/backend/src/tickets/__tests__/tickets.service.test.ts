@@ -203,13 +203,17 @@ describe('findAll', () => {
     service.create(customer, { subject: 'My issue', description: 'Help me' });
     service.create(otherCustomer, { subject: 'Other issue', description: 'Help them' });
 
-    const tickets = service.findAll(customer);
-    expect(tickets.every((t) => t.customerId === customer.id)).toBe(true);
+    const result = service.findAll(customer);
+    expect(result.tickets.every((t) => t.customerId === customer.id)).toBe(true);
+    expect(result.cursor).toBeGreaterThanOrEqual(0);
+    expect(typeof result.hasMore).toBe('boolean');
   });
 
   it('agent sees open tickets in queue', () => {
-    const tickets = service.findAll(agent);
-    expect(tickets.every((t) => t.status === 'open')).toBe(true);
+    const result = service.findAll(agent);
+    expect(result.tickets.every((t) => t.status === 'open')).toBe(true);
+    expect(result.cursor).toBeGreaterThanOrEqual(0);
+    expect(typeof result.hasMore).toBe('boolean');
   });
 });
 
@@ -454,26 +458,28 @@ describe('findAll - additional filters', () => {
   it('agent can view their own in_progress tickets with tab=my', () => {
     const ticket = service.create(customer, { subject: 'My assigned', description: 'X' });
     service.accept(ticket.id, agent);
-    const results = service.findAll(agent, { tab: 'my' });
-    expect(results.every((t) => t.agentId === agent.id && t.status === 'in_progress')).toBe(true);
+    const result = service.findAll(agent, { tab: 'my' });
+    expect(result.tickets.every((t) => t.agentId === agent.id && t.status === 'in_progress')).toBe(true);
   });
 
   it('filters by status', () => {
-    const results = service.findAll(agent, { status: 'open' });
-    expect(results.every((t) => t.status === 'open')).toBe(true);
+    const result = service.findAll(agent, { status: 'open' });
+    expect(result.tickets.every((t) => t.status === 'open')).toBe(true);
   });
 
   it('filters tickets by label name', () => {
     const ticket = service.create(customer, { subject: 'Label filter', description: 'X' });
     const allLabels = service.listLabels();
     service.addLabel(ticket.id, allLabels[0].id, agent);
-    const results = service.findAll(agent, { label: allLabels[0].name });
-    expect(results.some((t) => t.id === ticket.id)).toBe(true);
+    const result = service.findAll(agent, { label: allLabels[0].name });
+    expect(result.tickets.some((t) => t.id === ticket.id)).toBe(true);
   });
 
   it('returns empty when label filter matches nothing', () => {
-    const results = service.findAll(agent, { label: 'non-existent-label' });
-    expect(results).toEqual([]);
+    const result = service.findAll(agent, { label: 'non-existent-label' });
+    expect(result.tickets).toEqual([]);
+    expect(result.cursor).toBeNull();
+    expect(result.hasMore).toBe(false);
   });
 });
 

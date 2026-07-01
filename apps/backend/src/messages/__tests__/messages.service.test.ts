@@ -214,16 +214,20 @@ afterAll(async () => {
 describe('getMessages', () => {
   it('returns empty array for a ticket with no messages', () => {
     const ticketId = createTicket()
-    const messages = service.getMessages(ticketId, customer)
-    expect(messages).toEqual([])
+    const result = service.getMessages(ticketId, customer)
+    expect(result.messages).toEqual([])
+    expect(result.cursor).toBeNull()
+    expect(result.hasMore).toBe(false)
   })
 
   it('customer can view messages on their own ticket', () => {
     const ticketId = createTicket()
     service.sendMessage(ticketId, customer, 'Hello')
-    const messages = service.getMessages(ticketId, customer)
-    expect(messages.length).toBe(1)
-    expect(messages[0].body).toBe('Hello')
+    const result = service.getMessages(ticketId, customer)
+    expect(result.messages.length).toBe(1)
+    expect(result.messages[0].body).toBe('Hello')
+    expect(result.cursor).toBe(result.messages[0].id)
+    expect(result.hasMore).toBe(false)
   })
 
   it('customer cannot view messages on another customer ticket', () => {
@@ -236,9 +240,9 @@ describe('getMessages', () => {
   it('agent can view messages on any ticket', () => {
     const ticketId = createTicket()
     service.sendMessage(ticketId, customer, 'Agent visibility test')
-    const messages = service.getMessages(ticketId, agent)
-    expect(messages.length).toBe(1)
-    expect(messages[0].body).toBe('Agent visibility test')
+    const result = service.getMessages(ticketId, agent)
+    expect(result.messages.length).toBe(1)
+    expect(result.messages[0].body).toBe('Agent visibility test')
   })
 
   it('throws NotFoundError for non-existent ticket', () => {

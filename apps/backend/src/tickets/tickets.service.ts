@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { db, tickets, ticketLabels, labels, profiles, ticketEvents, notifications } from '@repo/database';
-import { eq, and, inArray, sql, desc, asc } from 'drizzle-orm';
+import { eq, and, inArray, sql, desc, asc, lt, gt } from 'drizzle-orm';
 
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { NotFoundError, ForbiddenError, ConflictError } from '../common/errors';
@@ -88,8 +88,11 @@ export class TicketsService {
       tab?: 'my' | 'queue';
       status?: string;
       label?: string | string[];
+      sort?: string;
+      cursor?: number;
+      limit?: number;
     } = {},
-  ): TicketRow[] {
+  ): { tickets: any[]; cursor: number | null; hasMore: boolean } {
     const conditions: any[] = [];
 
     if (user.role === 'customer') {
@@ -106,13 +109,7 @@ export class TicketsService {
       conditions.push(eq(tickets.status, options.status as TicketStatus));
     }
 
-    let rows = db
-      .select()
-      .from(tickets)
-      .where(and(...conditions))
-      .orderBy(desc(tickets.createdAt))
-      .all() as TicketRow[];
-
+    // Resolve label filter to SQL conditions for correct cursor pagination
     if (options.label) {
       const labelNames = Array.isArray(options.label) ? options.label : [options.label];
       const labelRows = db
@@ -121,20 +118,55 @@ export class TicketsService {
         .where(inArray(labels.name, labelNames))
         .all() as LabelRow[];
       if (labelRows.length > 0) {
-        const labelIdSet = new Set(labelRows.map((l) => l.id));
+        const labelIdList = labelRows.map((l) => l.id);
         const tlRows = db
           .select()
           .from(ticketLabels)
-          .where(inArray(ticketLabels.labelId, [...labelIdSet]))
+          .where(inArray(ticketLabels.labelId, labelIdList))
           .all() as { ticketId: number; labelId: number }[];
-        const matchingTicketIds = new Set(tlRows.map((tl) => tl.ticketId));
-        rows = rows.filter((t) => matchingTicketIds.has(t.id));
+        if (tlRows.length > 0) {
+          const matchingIds = [...new Set(tlRows.map((tl) => tl.ticketId))];
+          conditions.push(inArray(tickets.id, matchingIds));
+        } else {
+          return { tickets: [], cursor: null, hasMore: false };
+        }
       } else {
-        return [];
+        return { tickets: [], cursor: null, hasMore: false };
       }
     }
 
-    return rows.map((row) => this.enrichTicket(row));
+    const orderByMap: Record<string, any> = {
+      newest: desc(tickets.id),
+      oldest: asc(tickets.id),
+      status: [asc(tickets.status), desc(tickets.id)],
+    };
+    const order = orderByMap[options.sort ?? 'newest'];
+
+    if (options.cursor) {
+      if (options.sort === 'oldest') {
+        conditions.push(gt(tickets.id, options.cursor));
+      } else {
+        conditions.push(lt(tickets.id, options.cursor));
+      }
+    }
+
+    const limit = options.limit ?? 50;
+
+    const rows = db
+      .select()
+      .from(tickets)
+      .where(and(...conditions))
+      .orderBy(order)
+      .limit(limit + 1)
+      .all() as TicketRow[];
+
+    const hasMore = rows.length > limit;
+    if (hasMore) rows.pop();
+
+    const cursor = rows.length > 0 ? rows[rows.length - 1].id : null;
+    const enriched = rows.map((row) => this.enrichTicket(row));
+
+    return { tickets: enriched, cursor, hasMore };
   }
 
   findById(id: number, user: AuthenticatedUser) {

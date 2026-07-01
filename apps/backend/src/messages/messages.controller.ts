@@ -4,6 +4,7 @@ import {
   Post,
   Param,
   Body,
+  Query,
   UseGuards,
   ParseIntPipe,
   Inject,
@@ -16,6 +17,7 @@ import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/roles.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { ApiPaginated } from '../common/api-response';
 import { MessagesService } from './messages.service';
 
 @Controller('tickets/:id/messages')
@@ -27,10 +29,15 @@ export class MessagesController {
   @Roles('customer', 'agent')
   async getMessages(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: AuthenticatedUser,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit?: string,
+    @CurrentUser() user?: AuthenticatedUser,
   ) {
-    const msgs = await this.messagesService.getMessages(id, user)
-    return { data: msgs }
+    const result = await this.messagesService.getMessages(id, user!, {
+      cursor: cursor ? parseInt(cursor, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    })
+    return ApiPaginated(result.messages, result.cursor, result.hasMore)
   }
 
   @Post()

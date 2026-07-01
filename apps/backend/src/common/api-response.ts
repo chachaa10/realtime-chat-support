@@ -16,6 +16,7 @@ export interface ApiPaginatedResponse<T> {
   data: T[];
   meta: {
     cursor: number | null;
+    hasMore: boolean;
   };
 }
 
@@ -31,6 +32,6 @@ export function ApiError(
   return { error: { code, message, ...(errors ? { errors } : {}) } };
 }
 
-export function ApiPaginated<T>(data: T[], cursor: number | null): ApiPaginatedResponse<T> {
-  return { data, meta: { cursor } };
+export function ApiPaginated<T>(data: T[], cursor: number | null, hasMore: boolean): ApiPaginatedResponse<T> {
+  return { data, meta: { cursor, hasMore } };
 }

@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { db, tickets, messages, attachments, notifications as notificationsTable } from '@repo/database';
-import { eq, and, asc, inArray } from 'drizzle-orm';
+import { eq, and, asc, inArray, gt } from 'drizzle-orm';
 import type { Message } from '@repo/shared';
 
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
@@ -38,17 +38,36 @@ export class MessagesService {
     @Inject(NOTIFICATION_BROADCASTER) private readonly notificationBroadcaster: NotificationBroadcaster,
   ) {}
 
-  getMessages(ticketId: number, user: AuthenticatedUser): MessageWithAttachments[] {
+  getMessages(
+    ticketId: number,
+    user: AuthenticatedUser,
+    options: { cursor?: number; limit?: number } = {},
+  ): { messages: MessageWithAttachments[]; cursor: number | null; hasMore: boolean } {
     this.checkTicketAccess(ticketId, user)
+
+    const conditions: any[] = [eq(messages.ticketId, ticketId)]
+
+    if (options.cursor) {
+      conditions.push(gt(messages.id, options.cursor))
+    }
+
+    const limit = options.limit ?? 50
 
     const rows = db
       .select()
       .from(messages)
-      .where(eq(messages.ticketId, ticketId))
+      .where(and(...conditions))
       .orderBy(asc(messages.createdAt))
+      .limit(limit + 1)
       .all() as Message[]
 
-    return this.enrichWithAttachments(rows)
+    const hasMore = rows.length > limit
+    if (hasMore) rows.pop()
+
+    const enriched = this.enrichWithAttachments(rows)
+    const cursor = rows.length > 0 ? rows[rows.length - 1].id : null
+
+    return { messages: enriched, cursor, hasMore }
   }
 
   sendMessage(

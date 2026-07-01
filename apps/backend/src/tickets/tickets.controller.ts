@@ -19,6 +19,7 @@ import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/roles.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { ApiPaginated } from '../common/api-response';
 import { TicketsService } from './tickets.service';
 
 @Controller('tickets')
@@ -43,24 +44,34 @@ export class TicketsController {
     @Query('tab') tab?: string,
     @Query('status') status?: string,
     @Query('label') label?: string | string[],
+    @Query('sort') sort?: string,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit?: string,
     @CurrentUser() user?: AuthenticatedUser,
   ) {
-    const tickets = await this.ticketsService.findAll(user!, { tab: tab as any, status, label });
-    return { data: tickets };
+    const result = await this.ticketsService.findAll(user!, {
+      tab: tab as any,
+      status,
+      label,
+      sort,
+      cursor: cursor ? parseInt(cursor, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
+    return ApiPaginated(result.tickets, result.cursor, result.hasMore);
   }
 
   @Get('my')
   @Roles('customer')
   async findMy(@CurrentUser() user: AuthenticatedUser) {
-    const tickets = await this.ticketsService.findAll(user, { tab: 'my' });
-    return { data: tickets };
+    const result = await this.ticketsService.findAll(user, { tab: 'my' });
+    return ApiPaginated(result.tickets, result.cursor, result.hasMore);
   }
 
   @Get('queue')
   @Roles('agent')
   async findQueue(@CurrentUser() user: AuthenticatedUser) {
-    const tickets = await this.ticketsService.findAll(user, { tab: 'queue' });
-    return { data: tickets };
+    const result = await this.ticketsService.findAll(user, { tab: 'queue' });
+    return ApiPaginated(result.tickets, result.cursor, result.hasMore);
   }
 
   @Get('capacity-status')
