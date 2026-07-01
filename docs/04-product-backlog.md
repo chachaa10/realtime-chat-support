@@ -86,22 +86,22 @@ Prioritized by business value and dependency order. P0 = must-have for MVP, P1
 - [x] Broadcast ticket:resolved to agent pool
 - [x] Broadcast ticket:cancelled to agent pool
 
-### Not started
-- [ ] Agent return ticket to queue (in_progress -> open, clear assignment)
-- [ ] Agent availability toggle (Online / Away)
-- [ ] Agent capacity hint on Accept button ("At capacity")
+### Done
+- [x] Agent return ticket to queue (in_progress -> open, clear assignment)
+- [x] Agent availability toggle (Online / Away)
+- [x] Agent capacity hint on Accept button ("At capacity")
 
 ## P1 — Notifications
 
-_No schema, backend, or frontend implementation yet._
+_Done._
 
-- [ ] Notification DB schema and types
-- [ ] Notification service + controller (backend)
-- [ ] Ticket event simplified timeline on customer ticket detail
-- [ ] In-app notification feed (bell icon, badge count, notification list)
-- [ ] Notification auto-mark read on viewing related ticket
-- [ ] Browser tab title flash with unread count
-- [ ] In-app toast on new notification
+- [x] Notification DB schema and types
+- [x] Notification service + controller (backend)
+- [x] Ticket event simplified timeline on customer ticket detail
+- [x] In-app notification feed (bell icon, badge count, notification list)
+- [x] Notification auto-mark read on viewing related ticket
+- [x] Browser tab title flash with unread count
+- [x] In-app toast on new notification
 
 ## P2 — Backend Hardening
 
