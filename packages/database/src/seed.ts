@@ -24,8 +24,8 @@ const LABELS = [
 ];
 
 const STATIC_USERS = [
-  { name: 'Agent', email: 'agent@test.com', password: 'password123', role: 'agent' as const },
-  { name: 'Customer', email: 'customer@agent.com', password: 'password123', role: 'customer' as const },
+  { name: 'Agent', email: 'agent@test.com', password: 'Qwert1234', role: 'agent' as const },
+  { name: 'Customer', email: 'customer@agent.com', password: 'Qwert1234', role: 'customer' as const },
 ];
 
 async function seed() {
