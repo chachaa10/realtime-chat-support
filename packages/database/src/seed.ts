@@ -84,12 +84,17 @@ async function seed() {
   }[];
 
   const now = Date.now();
+  const statuses: ('open' | 'in_progress' | 'resolved' | 'cancelled')[] = [
+    'open', 'in_progress', 'resolved', 'cancelled', 'open', 'in_progress', 'open', 'resolved',
+  ]
   const ticketValues = customerIds.flatMap((customerId, i) => {
     const count = 1 + (i % 2);
     return Array.from({ length: count }, (_, j) => {
-      const isAssigned = j === 0 && i % 2 === 0;
-      const status: 'open' | 'in_progress' = isAssigned ? 'in_progress' : 'open';
-      const offset = (i * count + j) * 60000;
+      const idx = (i * count + j) % statuses.length
+      const status = statuses[idx]
+      const isAssigned = status === 'in_progress' || status === 'resolved'
+      const agentId = isAssigned ? faker.helpers.arrayElement([...agentIds]) : null
+      const offset = (i * count + j) * 60000
       return {
         subject: faker.helpers.arrayElement([
           'Cannot access my account',
@@ -106,9 +111,11 @@ async function seed() {
         description: faker.lorem.paragraph(),
         status,
         customerId,
-        agentId: isAssigned ? faker.helpers.arrayElement([...agentIds]) : null,
+        agentId,
         createdAt: now - offset,
         updatedAt: now - offset,
+        resolvedAt: status === 'resolved' ? now - offset + 30000 : null,
+        cancelledAt: status === 'cancelled' ? now - offset + 30000 : null,
       };
     });
   });
@@ -117,13 +124,39 @@ async function seed() {
     id: number;
     status: string;
     createdAt: number;
+    resolvedAt: number | null;
+    cancelledAt: number | null;
   }[];
 
   for (const t of ticketRows) {
-    const actorId = t.status === 'open' ? customerIds[0] : [...agentIds][0];
+    const customerActor = customerIds[0]
+    const agentActor = faker.helpers.arrayElement([...agentIds])
+
+    // null → open (ticket created)
     db.run(
-      sql`INSERT INTO ticket_events (ticket_id, from_status, to_status, actor_id, created_at) VALUES (${t.id}, NULL, ${t.status}, ${actorId}, ${t.createdAt})`,
-    );
+      sql`INSERT INTO ticket_events (ticket_id, from_status, to_status, actor_id, created_at) VALUES (${t.id}, NULL, 'open', ${customerActor}, ${t.createdAt})`,
+    )
+
+    if (t.status === 'in_progress' || t.status === 'resolved') {
+      // open → in_progress (agent assigned)
+      db.run(
+        sql`INSERT INTO ticket_events (ticket_id, from_status, to_status, actor_id, created_at) VALUES (${t.id}, 'open', 'in_progress', ${agentActor}, ${t.createdAt + 10000})`,
+      )
+    }
+
+    if (t.status === 'resolved') {
+      // in_progress → resolved (ticket resolved)
+      db.run(
+        sql`INSERT INTO ticket_events (ticket_id, from_status, to_status, actor_id, created_at) VALUES (${t.id}, 'in_progress', 'resolved', ${agentActor}, ${t.resolvedAt!})`,
+      )
+    }
+
+    if (t.status === 'cancelled') {
+      // open → cancelled (customer cancelled)
+      db.run(
+        sql`INSERT INTO ticket_events (ticket_id, from_status, to_status, actor_id, created_at) VALUES (${t.id}, 'open', 'cancelled', ${customerActor}, ${t.cancelledAt!})`,
+      )
+    }
   }
 
   for (const ticket of ticketRows) {
