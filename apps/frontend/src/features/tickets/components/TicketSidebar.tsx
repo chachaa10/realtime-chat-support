@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 
 import { SkeletonListItem, Spinner, EmptyState } from '@/components/ui'
 import { ThemeToggle } from '@/design-system/ThemeToggle'
+import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 import { useAuth } from '@/features/auth/context'
 import { useTickets } from '../hooks/useTickets'
 import { useLabels } from '../hooks/useLabels'
@@ -14,7 +15,7 @@ interface TicketSidebarProps {
 }
 
 export function TicketSidebar({ activeTicketId }: TicketSidebarProps) {
-  const { user, logout } = useAuth()
+  const { user, logout, updateUserStatus } = useAuth()
   const navigate = useNavigate()
   const isAgent = user?.role === 'agent'
   const search = useSearch({ from: undefined as any }) as TicketSearch
@@ -185,9 +186,19 @@ export function TicketSidebar({ activeTicketId }: TicketSidebarProps) {
           <div className="min-w-0">
             <p className="text-ink truncate text-[0.8125rem] font-medium">{user?.name}</p>
             <p className="text-ink-dim text-[0.6875rem] capitalize">{user?.role}</p>
+            {isAgent && (
+              <button
+                onClick={() => updateUserStatus(user?.status === 'away' ? 'online' : 'away')}
+                className="mt-0.5 inline-flex items-center gap-1 text-[0.625rem] text-ink-dim hover:text-ink transition-colors"
+              >
+                <span className={`inline-block h-1.5 w-1.5 rounded-full ${user?.status === 'away' ? 'bg-ink-dim' : 'bg-success'}`} />
+                {user?.status === 'away' ? 'Away' : 'Online'}
+              </button>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <NotificationBell />
           <ThemeToggle />
           <button
             onClick={() => {

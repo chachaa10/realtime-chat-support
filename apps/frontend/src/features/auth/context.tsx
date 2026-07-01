@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
+import { updateAvailability as updateAvailabilityApi } from '@/lib/api/auth';
+
 import * as authApi from '@/lib/api/auth';
 
 interface User {
@@ -7,6 +9,7 @@ interface User {
   name: string;
   email: string;
   role: 'customer' | 'agent';
+  status?: 'online' | 'away';
 }
 
 interface AuthContextType {
@@ -19,6 +22,7 @@ interface AuthContextType {
     role: 'customer' | 'agent',
   ) => Promise<void>;
   logout: () => void;
+  updateUserStatus: (status: 'online' | 'away') => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -53,8 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateUserStatus = useCallback(async (status: 'online' | 'away') => {
+    await updateAvailabilityApi(status);
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, status };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUserStatus }}>
       {children}
     </AuthContext.Provider>
   );

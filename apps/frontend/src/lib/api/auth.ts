@@ -1,4 +1,4 @@
-import { get, post } from './client';
+import { get, post, patch } from './client';
 
 export interface AuthData {
   token?: string;
@@ -27,4 +27,8 @@ export function signUp(name: string, email: string, password: string): Promise<A
 
 export function fetchProfile(): Promise<ProfileData> {
   return get<ProfileData>('/auth/profile');
+}
+
+export function updateAvailability(status: 'online' | 'away'): Promise<{ status: string }> {
+  return patch<{ status: string }>('/auth/profile/availability', { status });
 }
