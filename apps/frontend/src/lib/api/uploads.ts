@@ -5,6 +5,15 @@ const API_BASE =
     ? import.meta.env.VITE_API_URL
     : 'http://localhost:3001'
 
+export function fetchAttachmentAsBlob(attachmentId: number): Promise<Blob> {
+  return fetch(`${API_BASE}/uploads/${attachmentId}`, {
+    credentials: 'include',
+  }).then((res) => {
+    if (!res.ok) throw new Error('Failed to load attachment')
+    return res.blob()
+  })
+}
+
 export function uploadFile(file: File, ticketId: number): Promise<Attachment> {
   return uploadFileWithProgress(file, ticketId, () => {})
 }
