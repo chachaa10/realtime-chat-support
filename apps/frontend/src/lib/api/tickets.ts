@@ -22,17 +22,33 @@ export interface LabelData {
   color: string;
 }
 
+export interface PaginationMeta {
+  cursor: number | null;
+  hasMore: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
 export function fetchTickets(params?: {
   tab?: string;
   status?: string;
   label?: string;
-}): Promise<TicketData[]> {
+  sort?: string;
+  cursor?: number;
+  limit?: number;
+}): Promise<PaginatedResponse<TicketData>> {
   const search = new URLSearchParams();
   if (params?.tab) search.set('tab', params.tab);
   if (params?.status) search.set('status', params.status);
   if (params?.label) search.set('label', params.label);
+  if (params?.sort) search.set('sort', params.sort);
+  if (params?.cursor != null) search.set('cursor', params.cursor.toString());
+  if (params?.limit != null) search.set('limit', params.limit.toString());
   const qs = search.toString();
-  return get<TicketData[]>(`/tickets${qs ? '?' + qs : ''}`);
+  return get<PaginatedResponse<TicketData>>(`/tickets${qs ? '?' + qs : ''}`);
 }
 
 export function fetchTicket(id: number): Promise<TicketData> {

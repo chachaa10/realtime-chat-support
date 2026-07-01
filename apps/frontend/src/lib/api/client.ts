@@ -80,6 +80,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   const body = await res.json();
+  // Paginated responses contain both data and meta — return the whole body
+  if (body !== null && typeof body === 'object' && 'data' in body && 'meta' in body) {
+    return body as T;
+  }
   return (body.data ?? body) as T;
 }
 

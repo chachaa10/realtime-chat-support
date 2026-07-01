@@ -11,7 +11,7 @@ export function useMessages(ticketId: number) {
 
   const query = useQuery<MessageWithAttachments[]>({
     queryKey: ['messages', ticketId],
-    queryFn: () => fetchMessages(ticketId),
+    queryFn: () => fetchMessages(ticketId).then((r) => r.data),
     enabled: !!ticketId,
   })
 
