@@ -15,9 +15,9 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { ApiPaginated } from '../common/api-response';
 import { Roles } from '../common/roles.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
-import { ApiPaginated } from '../common/api-response';
 import { MessagesService } from './messages.service';
 
 @Controller('tickets/:id/messages')
@@ -36,8 +36,8 @@ export class MessagesController {
     const result = await this.messagesService.getMessages(id, user!, {
       cursor: cursor ? parseInt(cursor, 10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
-    })
-    return ApiPaginated(result.messages, result.cursor, result.hasMore)
+    });
+    return ApiPaginated(result.messages, result.cursor, result.hasMore);
   }
 
   @Post()
@@ -48,7 +48,7 @@ export class MessagesController {
     body: { ticketId: number; body: string; attachmentIds?: number[] },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    const msg = await this.messagesService.sendMessage(id, user, body.body, body.attachmentIds)
-    return { data: msg }
+    const msg = await this.messagesService.sendMessage(id, user, body.body, body.attachmentIds);
+    return { data: msg };
   }
 }

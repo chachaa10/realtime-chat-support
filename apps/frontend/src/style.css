@@ -5,13 +5,21 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @keyframes skeleton-shimmer {
-  0% { background-position: calc(-100% - 200px) 0; }
-  100% { background-position: calc(100% + 200px) 0; }
+  0% {
+    background-position: calc(-100% - 200px) 0;
+  }
+  100% {
+    background-position: calc(100% + 200px) 0;
+  }
 }
 
 @keyframes loading-bar-shimmer {
-  0% { translate: -100% 0; }
-  100% { translate: 200% 0; }
+  0% {
+    translate: -100% 0;
+  }
+  100% {
+    translate: 200% 0;
+  }
 }
 
 @utility animate-skeleton {

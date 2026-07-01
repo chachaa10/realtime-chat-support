@@ -1,18 +1,11 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 interface SkeletonProps {
-  className?: string
+  className?: string;
 }
 
 export function Skeleton({ className }: SkeletonProps) {
-  return (
-    <div
-      className={cn(
-        'bg-ink-muted/10 animate-skeleton rounded-lg',
-        className,
-      )}
-    />
-  )
+  return <div className={cn('bg-ink-muted/10 animate-skeleton rounded-lg', className)} />;
 }
 
 export function SkeletonText({ lines = 3, className }: { lines?: number; className?: string }) {
@@ -21,18 +14,15 @@ export function SkeletonText({ lines = 3, className }: { lines?: number; classNa
       {Array.from({ length: lines }).map((_, i) => (
         <Skeleton
           key={i}
-          className={cn(
-            'h-3.5',
-            i === lines - 1 && lines > 1 ? 'w-[60%]' : 'w-full',
-          )}
+          className={cn('h-3.5', i === lines - 1 && lines > 1 ? 'w-[60%]' : 'w-full')}
         />
       ))}
     </div>
-  )
+  );
 }
 
 export function SkeletonAvatar({ className }: { className?: string }) {
-  return <Skeleton className={cn('size-9 shrink-0 rounded-full', className)} />
+  return <Skeleton className={cn('size-9 shrink-0 rounded-full', className)} />;
 }
 
 export function SkeletonCard({ className }: { className?: string }) {
@@ -52,7 +42,7 @@ export function SkeletonCard({ className }: { className?: string }) {
         <Skeleton className="h-3 w-20" />
       </div>
     </div>
-  )
+  );
 }
 
 export function SkeletonListItem({ className }: { className?: string }) {
@@ -71,15 +61,20 @@ export function SkeletonListItem({ className }: { className?: string }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function SkeletonMessage({ align = 'start' }: { align?: 'start' | 'end' }) {
   return (
     <div className={cn('flex', align === 'end' ? 'justify-end' : 'justify-start')}>
-      <Skeleton className={cn('h-10 w-48 rounded-xl', align === 'start' ? 'rounded-bl-sm' : 'rounded-br-sm')} />
+      <Skeleton
+        className={cn(
+          'h-10 w-48 rounded-xl',
+          align === 'start' ? 'rounded-bl-sm' : 'rounded-br-sm',
+        )}
+      />
     </div>
-  )
+  );
 }
 
 export function SkeletonLabelPills({ count = 4 }: { count?: number }) {
@@ -89,5 +84,5 @@ export function SkeletonLabelPills({ count = 4 }: { count?: number }) {
         <Skeleton key={i} className="h-7 w-[72px] rounded-full" />
       ))}
     </div>
-  )
+  );
 }

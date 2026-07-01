@@ -3,11 +3,11 @@ import { fileURLToPath } from 'node:url';
 
 import { faker } from '@faker-js/faker';
 import { initEnv, env } from '@repo/shared/init-env';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import Database from 'better-sqlite3';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 
 import * as schema from './schema';
 
@@ -25,7 +25,12 @@ const LABELS = [
 
 const STATIC_USERS = [
   { name: 'Agent', email: 'agent@test.com', password: 'Qwert1234', role: 'agent' as const },
-  { name: 'Customer', email: 'customer@test.com', password: 'Qwert1234', role: 'customer' as const },
+  {
+    name: 'Customer',
+    email: 'customer@test.com',
+    password: 'Qwert1234',
+    role: 'customer' as const,
+  },
 ];
 
 async function seed() {
@@ -115,7 +120,10 @@ async function seed() {
   }[];
 
   const now = Date.now();
-  const ticketConfigs: { status: 'open' | 'in_progress' | 'resolved' | 'cancelled'; subject: string }[] = [
+  const ticketConfigs: {
+    status: 'open' | 'in_progress' | 'resolved' | 'cancelled';
+    subject: string;
+  }[] = [
     { status: 'open', subject: 'Cannot access my account' },
     { status: 'open', subject: 'Feature request: dark mode' },
     { status: 'in_progress', subject: 'Payment not processed' },

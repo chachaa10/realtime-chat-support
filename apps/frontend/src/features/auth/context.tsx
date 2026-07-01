@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
 import { updateAvailability as updateAvailabilityApi } from '@/lib/api/auth';
-
 import * as authApi from '@/lib/api/auth';
 
 interface User {

@@ -13,16 +13,17 @@ export interface NotificationRow {
   createdAt: number;
 }
 
-const VALID_TYPES = ['ticket_assigned', 'ticket_resolved', 'ticket_cancelled', 'ticket_returned', 'new_message'] as const;
+const VALID_TYPES = [
+  'ticket_assigned',
+  'ticket_resolved',
+  'ticket_cancelled',
+  'ticket_returned',
+  'new_message',
+] as const;
 
 @Injectable()
 export class NotificationsService {
-  create(
-    userId: string,
-    type: string,
-    ticketId: number,
-    message: string,
-  ): NotificationRow {
+  create(userId: string, type: string, ticketId: number, message: string): NotificationRow {
     if (!VALID_TYPES.includes(type as any)) {
       throw new Error(`Invalid notification type: ${type}`);
     }

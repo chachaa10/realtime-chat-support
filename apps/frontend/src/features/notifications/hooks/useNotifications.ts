@@ -1,6 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, markNotificationsReadByTicket, type NotificationData } from '@/lib/api/notifications';
+import {
+  fetchNotifications,
+  fetchUnreadCount,
+  markNotificationRead,
+  markAllNotificationsRead,
+  markNotificationsReadByTicket,
+  type NotificationData,
+} from '@/lib/api/notifications';
 
 export function useNotifications() {
   return useQuery<NotificationData[]>({

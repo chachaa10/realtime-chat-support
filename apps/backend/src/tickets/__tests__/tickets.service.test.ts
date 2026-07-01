@@ -29,8 +29,8 @@ import { sql } from 'drizzle-orm';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 import type { AuthenticatedUser } from '../../auth/guards/jwt-auth.guard';
-import { TICKET_BROADCASTER, type TicketBroadcaster } from '../ticket-broadcaster';
 import { NOTIFICATION_BROADCASTER } from '../../notifications/notification-broadcaster';
+import { TICKET_BROADCASTER, type TicketBroadcaster } from '../ticket-broadcaster';
 import { TicketsService } from '../tickets.service';
 
 let service: TicketsService;
@@ -258,14 +258,14 @@ describe('accept', () => {
   });
 
   it('rejects accept when agent is at capacity', () => {
-    const tickets: number[] = []
+    const tickets: number[] = [];
     for (let i = 0; i < 8; i++) {
-      const t = service.create(otherCustomer, { subject: `Capacity ${i}`, description: 'X' })
-      tickets.push(service.accept(t.id, otherAgent).id)
+      const t = service.create(otherCustomer, { subject: `Capacity ${i}`, description: 'X' });
+      tickets.push(service.accept(t.id, otherAgent).id);
     }
 
-    const overflow = service.create(otherCustomer, { subject: 'Overflow', description: 'X' })
-    expect(() => service.accept(overflow.id, otherAgent)).toThrow('capacity limit')
+    const overflow = service.create(otherCustomer, { subject: 'Overflow', description: 'X' });
+    expect(() => service.accept(overflow.id, otherAgent)).toThrow('capacity limit');
   });
 
   it('rejects accept when agent is away', () => {
@@ -364,7 +364,9 @@ describe('returnToQueue', () => {
   it('customer cannot return a ticket', () => {
     const ticket = service.create(customer, { subject: 'No return', description: 'By customer' });
     service.accept(ticket.id, agent);
-    expect(() => service.returnToQueue(ticket.id, customer)).toThrow('Only agents can return tickets');
+    expect(() => service.returnToQueue(ticket.id, customer)).toThrow(
+      'Only agents can return tickets',
+    );
   });
 
   it('throws NotFoundError for non-existent ticket', () => {
@@ -459,7 +461,9 @@ describe('findAll - additional filters', () => {
     const ticket = service.create(customer, { subject: 'My assigned', description: 'X' });
     service.accept(ticket.id, agent);
     const result = service.findAll(agent, { tab: 'my' });
-    expect(result.tickets.every((t) => t.agentId === agent.id && t.status === 'in_progress')).toBe(true);
+    expect(result.tickets.every((t) => t.agentId === agent.id && t.status === 'in_progress')).toBe(
+      true,
+    );
   });
 
   it('filters by status', () => {

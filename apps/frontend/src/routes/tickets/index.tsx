@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
 import { Outlet, createRoute, useMatch } from '@tanstack/react-router';
 import { Menu } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 import { TicketSidebar } from '@/features/tickets/components/TicketSidebar';
 
@@ -26,11 +26,11 @@ function TicketsLayout() {
 
   useEffect(() => {
     function handleClose() {
-      setSidebarOpen(false)
+      setSidebarOpen(false);
     }
-    window.addEventListener('close-mobile-sidebar', handleClose)
-    return () => window.removeEventListener('close-mobile-sidebar', handleClose)
-  }, [])
+    window.addEventListener('close-mobile-sidebar', handleClose);
+    return () => window.removeEventListener('close-mobile-sidebar', handleClose);
+  }, []);
 
   return (
     <div className="flex h-full">
@@ -46,7 +46,7 @@ function TicketsLayout() {
       <div
         className={`${
           sidebarOpen ? 'fixed inset-y-0 left-0 z-50 w-[300px]' : 'hidden w-0'
-        } md:relative md:flex md:w-[300px] shrink-0`}
+        } shrink-0 md:relative md:flex md:w-[300px]`}
       >
         <TicketSidebar
           activeTicketId={activeTicketId}
@@ -58,7 +58,7 @@ function TicketsLayout() {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile header with hamburger */}
-        <div className="md:hidden flex items-center gap-2 border-b border-border px-4 py-2">
+        <div className="border-border flex items-center gap-2 border-b px-4 py-2 md:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-ink-muted hover:text-ink inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors"

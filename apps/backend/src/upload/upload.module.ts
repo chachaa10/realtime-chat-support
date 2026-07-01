@@ -1,15 +1,16 @@
-import { Module } from '@nestjs/common'
-import { mkdirSync, existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdirSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
-import { FILE_STORAGE } from './file-storage'
-import { LocalFileStorage } from './local-file-storage'
-import { UploadController } from './upload.controller'
-import { CleanupService } from './cleanup.service'
+import { Module } from '@nestjs/common';
 
-const uploadDir = join(process.cwd(), 'uploads')
+import { CleanupService } from './cleanup.service';
+import { FILE_STORAGE } from './file-storage';
+import { LocalFileStorage } from './local-file-storage';
+import { UploadController } from './upload.controller';
+
+const uploadDir = join(process.cwd(), 'uploads');
 if (!existsSync(uploadDir)) {
-  mkdirSync(uploadDir, { recursive: true })
+  mkdirSync(uploadDir, { recursive: true });
 }
 
 @Module({

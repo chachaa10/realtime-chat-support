@@ -17,9 +17,9 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { ApiPaginated } from '../common/api-response';
 import { Roles } from '../common/roles.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
-import { ApiPaginated } from '../common/api-response';
 import { TicketsService } from './tickets.service';
 
 @Controller('tickets')
@@ -118,7 +118,10 @@ export class TicketsController {
 
   @Patch(':id/return-to-queue')
   @Roles('agent')
-  async returnToQueue(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
+  async returnToQueue(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const ticket = await this.ticketsService.returnToQueue(id, user);
     return { data: ticket };
   }

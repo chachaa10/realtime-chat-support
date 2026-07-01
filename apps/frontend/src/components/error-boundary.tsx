@@ -1,45 +1,45 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface ErrorBoundaryProps {
-  children: ReactNode
-  fallback?: ReactNode
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface ErrorBoundaryState {
-  error: Error | null
+  error: Error | null;
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
-    super(props)
-    this.state = { error: null }
+    super(props);
+    this.state = { error: null };
   }
 
   static getDerivedStateFromError(error: Error) {
-    return { error }
+    return { error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     if (this.props.onError) {
-      this.props.onError(error, errorInfo)
+      this.props.onError(error, errorInfo);
     }
   }
 
   handleReset = () => {
-    this.setState({ error: null })
-  }
+    this.setState({ error: null });
+  };
 
   render() {
     if (this.state.error) {
       if (this.props.fallback) {
-        return this.props.fallback
+        return this.props.fallback;
       }
 
       return (
         <div className="flex flex-1 flex-col items-center justify-center p-8">
           <div className="mx-auto max-w-sm text-center">
-            <div className="bg-danger/10 text-danger mb-3 mx-auto flex size-10 items-center justify-center rounded-full">
+            <div className="bg-danger/10 text-danger mx-auto mb-3 flex size-10 items-center justify-center rounded-full">
               <svg
                 width="18"
                 height="18"
@@ -61,15 +61,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </p>
             <button
               onClick={this.handleReset}
-              className="mt-4 inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-[0.8125rem] font-medium text-ink transition-colors hover:bg-surface-sunken"
+              className="border-border text-ink hover:bg-surface-sunken mt-4 inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-[0.8125rem] font-medium transition-colors"
             >
               Try again
             </button>
           </div>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }

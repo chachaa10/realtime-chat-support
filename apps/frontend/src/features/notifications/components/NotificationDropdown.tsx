@@ -1,6 +1,10 @@
 import { useNavigate } from '@tanstack/react-router';
 
-import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '../hooks/useNotifications';
+import {
+  useNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+} from '../hooks/useNotifications';
 
 interface NotificationDropdownProps {
   onClose: () => void;
@@ -34,8 +38,8 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
   }
 
   return (
-    <div className="absolute right-0 top-full z-50 mt-1 w-80 rounded-lg border border-border bg-surface shadow-lg">
-      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+    <div className="border-border bg-surface absolute top-full right-0 z-50 mt-1 w-80 rounded-lg border shadow-lg">
+      <div className="border-border flex items-center justify-between border-b px-3 py-2">
         <span className="text-ink text-[0.8125rem] font-semibold">Notifications</span>
         {unread.length > 0 && (
           <button
@@ -56,11 +60,13 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
             <button
               key={n.id}
               onClick={() => handleClick(n)}
-              className={`w-full border-b border-border px-3 py-2.5 text-left transition-colors hover:bg-surface-hover last:border-b-0 ${
+              className={`border-border hover:bg-surface-hover w-full border-b px-3 py-2.5 text-left transition-colors last:border-b-0 ${
                 !n.isRead ? 'bg-surface-sunken' : ''
               }`}
             >
-              <p className={`text-ink text-[0.8125rem] leading-snug ${!n.isRead ? 'font-medium' : ''}`}>
+              <p
+                className={`text-ink text-[0.8125rem] leading-snug ${!n.isRead ? 'font-medium' : ''}`}
+              >
                 {n.message}
               </p>
               <p className="text-ink-dim mt-0.5 text-[0.6875rem]">{formatTime(n.createdAt)}</p>

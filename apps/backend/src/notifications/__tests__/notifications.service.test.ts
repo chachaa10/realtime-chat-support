@@ -50,13 +50,23 @@ function createTables() {
 beforeAll(async () => {
   createTables();
 
-  db.run(sql`INSERT INTO profiles (id, role, created_at) VALUES (${agentId}, 'agent', ${Date.now()})`);
-  db.run(sql`INSERT INTO profiles (id, role, created_at) VALUES (${customerId}, 'customer', ${Date.now()})`);
-  db.run(sql`INSERT INTO profiles (id, role, created_at) VALUES (${otherUserId}, 'customer', ${Date.now()})`);
+  db.run(
+    sql`INSERT INTO profiles (id, role, created_at) VALUES (${agentId}, 'agent', ${Date.now()})`,
+  );
+  db.run(
+    sql`INSERT INTO profiles (id, role, created_at) VALUES (${customerId}, 'customer', ${Date.now()})`,
+  );
+  db.run(
+    sql`INSERT INTO profiles (id, role, created_at) VALUES (${otherUserId}, 'customer', ${Date.now()})`,
+  );
 
   const now = Date.now();
-  db.run(sql`INSERT INTO tickets (id, subject, description, status, customer_id, agent_id, created_at, updated_at) VALUES (1, 'Test ticket', 'Test', 'open', ${customerId}, NULL, ${now}, ${now})`);
-  db.run(sql`INSERT INTO tickets (id, subject, description, status, customer_id, agent_id, created_at, updated_at) VALUES (2, 'Assigned ticket', 'Test', 'in_progress', ${customerId}, ${agentId}, ${now}, ${now})`);
+  db.run(
+    sql`INSERT INTO tickets (id, subject, description, status, customer_id, agent_id, created_at, updated_at) VALUES (1, 'Test ticket', 'Test', 'open', ${customerId}, NULL, ${now}, ${now})`,
+  );
+  db.run(
+    sql`INSERT INTO tickets (id, subject, description, status, customer_id, agent_id, created_at, updated_at) VALUES (2, 'Assigned ticket', 'Test', 'in_progress', ${customerId}, ${agentId}, ${now}, ${now})`,
+  );
 
   const moduleRef: TestingModule = await Test.createTestingModule({
     providers: [NotificationsService],

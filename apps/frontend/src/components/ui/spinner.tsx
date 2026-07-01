@@ -1,16 +1,16 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 interface SpinnerProps {
-  size?: 'sm' | 'md' | 'lg'
-  className?: string
-  label?: string
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+  label?: string;
 }
 
 const sizeMap = {
   sm: 'size-4',
   md: 'size-5',
   lg: 'size-8',
-}
+};
 
 export function Spinner({ size = 'md', className, label }: SpinnerProps) {
   const spinner = (
@@ -40,7 +40,7 @@ export function Spinner({ size = 'md', className, label }: SpinnerProps) {
         strokeLinecap="round"
       />
     </svg>
-  )
+  );
 
   if (label) {
     return (
@@ -48,10 +48,10 @@ export function Spinner({ size = 'md', className, label }: SpinnerProps) {
         {spinner}
         <span className="text-ink-muted text-[0.8125rem]">{label}</span>
       </span>
-    )
+    );
   }
 
-  return spinner
+  return spinner;
 }
 
 export function SpinnerFullPage({ label = 'Loading...' }: { label?: string }) {
@@ -60,5 +60,5 @@ export function SpinnerFullPage({ label = 'Loading...' }: { label?: string }) {
       <Spinner size="lg" />
       {label && <span className="text-ink-muted text-[0.8125rem]">{label}</span>}
     </div>
-  )
+  );
 }

@@ -17,6 +17,12 @@ import { TicketsService } from './tickets.service';
     { provide: MESSAGE_BROADCASTER, useExisting: TicketsGateway },
     { provide: NOTIFICATION_BROADCASTER, useExisting: TicketsGateway },
   ],
-  exports: [TicketsService, TicketsGateway, MESSAGE_BROADCASTER, TICKET_BROADCASTER, NOTIFICATION_BROADCASTER],
+  exports: [
+    TicketsService,
+    TicketsGateway,
+    MESSAGE_BROADCASTER,
+    TICKET_BROADCASTER,
+    NOTIFICATION_BROADCASTER,
+  ],
 })
 export class TicketsModule {}

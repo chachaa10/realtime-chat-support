@@ -1,15 +1,27 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { db, tickets, ticketLabels, labels, profiles, users, ticketEvents, notifications } from '@repo/database';
+import {
+  db,
+  tickets,
+  ticketLabels,
+  labels,
+  profiles,
+  users,
+  ticketEvents,
+  notifications,
+} from '@repo/database';
 import { eq, and, inArray, sql, desc, asc, lt, gt } from 'drizzle-orm';
 
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { NotFoundError, ForbiddenError, ConflictError } from '../common/errors';
+import {
+  NOTIFICATION_BROADCASTER,
+  type NotificationBroadcaster,
+} from '../notifications/notification-broadcaster';
 import { TICKET_BROADCASTER, type TicketBroadcaster } from './ticket-broadcaster';
-import { NOTIFICATION_BROADCASTER, type NotificationBroadcaster } from '../notifications/notification-broadcaster';
 
 type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'cancelled';
 
-const AGENT_MAX_CAPACITY = 8
+const AGENT_MAX_CAPACITY = 8;
 
 interface CreateTicketInput {
   subject: string;
@@ -46,7 +58,8 @@ export interface LabelRow {
 export class TicketsService {
   constructor(
     @Inject(TICKET_BROADCASTER) private readonly broadcaster: TicketBroadcaster,
-    @Inject(NOTIFICATION_BROADCASTER) private readonly notificationBroadcaster: NotificationBroadcaster,
+    @Inject(NOTIFICATION_BROADCASTER)
+    private readonly notificationBroadcaster: NotificationBroadcaster,
   ) {}
 
   create(user: AuthenticatedUser, input: CreateTicketInput) {
@@ -216,8 +229,9 @@ export class TicketsService {
       throw new ForbiddenError('Only agents can accept tickets');
     }
 
-    const profileRows = db
-      .all(sql`SELECT status FROM profiles WHERE id = ${user.id} LIMIT 1`) as { status: string }[];
+    const profileRows = db.all(sql`SELECT status FROM profiles WHERE id = ${user.id} LIMIT 1`) as {
+      status: string;
+    }[];
 
     if (profileRows[0]?.status === 'away') {
       throw new ConflictError('You are currently away');
@@ -253,7 +267,12 @@ export class TicketsService {
 
     this.recordEvent(id, 'open', 'in_progress', user.id);
     this.broadcaster.ticketAccepted(id);
-    this.createNotification(rows[0].customerId, 'ticket_assigned', id, `Your ticket #${id} has been accepted`);
+    this.createNotification(
+      rows[0].customerId,
+      'ticket_assigned',
+      id,
+      `Your ticket #${id} has been accepted`,
+    );
     return this.enrichTicket(rows[0]);
   }
 
@@ -293,7 +312,12 @@ export class TicketsService {
 
     this.recordEvent(id, 'in_progress', 'resolved', user.id);
     this.broadcaster.ticketResolved(id);
-    this.createNotification(rows[0].customerId, 'ticket_resolved', id, `Your ticket #${id} has been resolved`);
+    this.createNotification(
+      rows[0].customerId,
+      'ticket_resolved',
+      id,
+      `Your ticket #${id} has been resolved`,
+    );
     return this.enrichTicket(rows[0]);
   }
 
@@ -370,7 +394,12 @@ export class TicketsService {
 
     this.recordEvent(id, 'in_progress', 'open', user.id);
     this.broadcaster.ticketReturnedToQueue(id);
-    this.createNotification(rows[0].customerId, 'ticket_returned', id, `Your ticket #${id} has been returned to the queue`);
+    this.createNotification(
+      rows[0].customerId,
+      'ticket_returned',
+      id,
+      `Your ticket #${id} has been returned to the queue`,
+    );
     return this.enrichTicket(rows[0]);
   }
 
@@ -490,7 +519,11 @@ export class TicketsService {
     this.notificationBroadcaster.notificationCreated(userId, rows[0]);
   }
 
-  getCapacityStatus(userId: string): { inProgressCount: number; maxCapacity: number; atCapacity: boolean } {
+  getCapacityStatus(userId: string): {
+    inProgressCount: number;
+    maxCapacity: number;
+    atCapacity: boolean;
+  } {
     const count = db
       .select({ count: sql<number>`COUNT(*)` })
       .from(tickets)

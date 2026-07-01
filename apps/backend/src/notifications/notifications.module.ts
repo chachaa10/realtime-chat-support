@@ -6,10 +6,7 @@ import { NotificationsService } from './notifications.service';
 
 @Module({
   controllers: [NotificationsController],
-  providers: [
-    NotificationsService,
-    { provide: NOTIFICATION_BROADCASTER, useFactory: () => null },
-  ],
+  providers: [NotificationsService, { provide: NOTIFICATION_BROADCASTER, useFactory: () => null }],
   exports: [NotificationsService, NOTIFICATION_BROADCASTER],
 })
 export class NotificationsModule {}

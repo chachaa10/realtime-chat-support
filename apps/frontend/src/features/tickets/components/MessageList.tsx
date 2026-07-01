@@ -1,25 +1,33 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect } from 'react';
 
-import { SkeletonMessage, EmptyState, ErrorState } from '@/components/ui'
-import { useAuth } from '@/features/auth/context'
-import type { MessageWithAttachments } from '@/lib/api/messages'
-import { MessageBubble } from './MessageBubble'
+import { SkeletonMessage, EmptyState, ErrorState } from '@/components/ui';
+import { useAuth } from '@/features/auth/context';
+import type { MessageWithAttachments } from '@/lib/api/messages';
+
+import { MessageBubble } from './MessageBubble';
+import { TypingDots } from './TypingDots';
 
 interface MessageListProps {
-  messages: MessageWithAttachments[] | undefined
-  isLoading: boolean
-  isError?: boolean
-  typingIndicator?: string | null
-  onRetry?: () => void
+  messages: MessageWithAttachments[] | undefined;
+  isLoading: boolean;
+  isError?: boolean;
+  typingIndicator?: string | null;
+  onRetry?: () => void;
 }
 
-export function MessageList({ messages, isLoading, isError, typingIndicator, onRetry }: MessageListProps) {
-  const { user } = useAuth()
-  const bottomRef = useRef<HTMLDivElement>(null)
+export function MessageList({
+  messages,
+  isLoading,
+  isError,
+  typingIndicator,
+  onRetry,
+}: MessageListProps) {
+  const { user } = useAuth();
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   if (isLoading) {
     return (
@@ -30,25 +38,15 @@ export function MessageList({ messages, isLoading, isError, typingIndicator, onR
           <SkeletonMessage />
         </div>
       </div>
-    )
+    );
   }
 
   if (isError) {
-    return (
-      <ErrorState
-        message="Failed to load messages"
-        onRetry={onRetry}
-      />
-    )
+    return <ErrorState message="Failed to load messages" onRetry={onRetry} />;
   }
 
   if (!messages || messages.length === 0) {
-    return (
-      <EmptyState
-        title="No messages yet"
-        description="Send the first message!"
-      />
-    )
+    return <EmptyState title="No messages yet" description="Send the first message!" />;
   }
 
   return (
@@ -63,14 +61,13 @@ export function MessageList({ messages, isLoading, isError, typingIndicator, onR
           />
         ))}
         {typingIndicator && (
-          <div className="flex justify-start">
-            <div className="text-ink-muted rounded-xl bg-ink/5 px-4 py-2 text-[0.8125rem] italic">
-              {typingIndicator}
-            </div>
+          <div className="flex items-center justify-start gap-2">
+            <TypingDots />
+            <span className="text-ink-muted text-[0.75rem]">{typingIndicator}</span>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
     </div>
-  )
+  );
 }

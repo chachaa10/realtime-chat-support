@@ -40,7 +40,7 @@ export function TicketListItem({ ticket, isActive }: TicketListItemProps) {
       className={`flex flex-col gap-0.5 border-l-3 px-4 py-3 text-left transition-colors ${
         isActive
           ? 'border-brand bg-brand/8 text-ink'
-          : 'border-transparent text-ink hover:bg-surface'
+          : 'text-ink hover:bg-surface border-transparent'
       }`}
     >
       <div className="flex items-start gap-2">
@@ -50,7 +50,9 @@ export function TicketListItem({ ticket, isActive }: TicketListItemProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <span className="truncate text-[0.8125rem] font-medium">{ticket.subject}</span>
-            <span className="text-ink-dim shrink-0 text-[0.6875rem]">{formatTime(ticket.createdAt)}</span>
+            <span className="text-ink-dim shrink-0 text-[0.6875rem]">
+              {formatTime(ticket.createdAt)}
+            </span>
           </div>
           <p className="text-ink-muted mt-0.5 truncate text-[0.75rem] leading-snug">
             {preview(ticket.description)}
@@ -60,7 +62,7 @@ export function TicketListItem({ ticket, isActive }: TicketListItemProps) {
               {ticket.labels.slice(0, 2).map((l) => (
                 <span
                   key={l.id}
-                  className="inline-block rounded-full px-1.5 py-0.5 text-[0.625rem] font-medium leading-none"
+                  className="inline-block rounded-full px-1.5 py-0.5 text-[0.625rem] leading-none font-medium"
                   style={{ backgroundColor: l.color + '18', color: l.color }}
                 >
                   {l.name}

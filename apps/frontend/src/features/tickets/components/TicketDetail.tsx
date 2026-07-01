@@ -1,13 +1,13 @@
 import { useAuth } from '@/features/auth/context';
 import type { TicketData } from '@/lib/api/tickets';
 
-import { useAcceptTicket, useResolveTicket, useCancelTicket } from '../hooks/useTicketMutations';
 import { useMessages } from '../hooks/useMessages';
+import { useAcceptTicket, useResolveTicket, useCancelTicket } from '../hooks/useTicketMutations';
 import { useTypingIndicator } from '../hooks/useTypingIndicator';
-import { TicketStatusBadge } from './TicketStatusBadge';
-import { MessageList } from './MessageList';
-import { MessageInput } from './MessageInput';
 import { ConnectionStatus } from './ConnectionStatus';
+import { MessageInput } from './MessageInput';
+import { MessageList } from './MessageList';
+import { TicketStatusBadge } from './TicketStatusBadge';
 
 function formatDate(ts: number) {
   return new Date(ts).toLocaleString();
@@ -19,7 +19,11 @@ export function TicketDetail({ ticket }: { ticket: TicketData }) {
   const resolveMutation = useResolveTicket();
   const cancelMutation = useCancelTicket();
 
-  const { data: messages, isLoading: messagesLoading, isError: messagesError } = useMessages(ticket.id);
+  const {
+    data: messages,
+    isLoading: messagesLoading,
+    isError: messagesError,
+  } = useMessages(ticket.id);
   const typingIndicator = useTypingIndicator(ticket.id);
 
   const isCustomer = user?.role === 'customer';

@@ -2,10 +2,10 @@ import { useNavigate } from '@tanstack/react-router';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { SkeletonLabelPills } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SkeletonLabelPills } from '@/components/ui';
 import { uploadFile } from '@/lib/api/uploads';
 
 import { useLabels } from '../hooks/useLabels';
@@ -164,7 +164,16 @@ export function CreateTicketForm() {
             disabled={isPending}
             className="border-border text-ink-muted hover:text-ink hover:bg-surface inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-[0.8125rem] font-medium transition-colors disabled:opacity-40"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
@@ -182,7 +191,16 @@ export function CreateTicketForm() {
                 key={f.id}
                 className="border-border text-ink-muted flex items-center gap-2 rounded-lg border px-3 py-1.5 text-[0.8125rem]"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
@@ -195,7 +213,16 @@ export function CreateTicketForm() {
                   className="text-ink-dim hover:text-danger ml-1 shrink-0 transition-colors disabled:opacity-40"
                   aria-label={`Remove ${f.file.name}`}
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
@@ -208,12 +235,34 @@ export function CreateTicketForm() {
 
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending && (
-          <svg className="animate-spin -ml-1 mr-2 size-4" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round" className="opacity-20" />
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" strokeDashoffset="8" strokeLinecap="round" />
+          <svg className="mr-2 -ml-1 size-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeDasharray="31.4 31.4"
+              strokeLinecap="round"
+              className="opacity-20"
+            />
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeDasharray="31.4 31.4"
+              strokeDashoffset="8"
+              strokeLinecap="round"
+            />
           </svg>
         )}
-        {uploading ? 'Uploading attachments...' : createMutation.isPending ? 'Creating...' : 'Create Ticket'}
+        {uploading
+          ? 'Uploading attachments...'
+          : createMutation.isPending
+            ? 'Creating...'
+            : 'Create Ticket'}
       </Button>
 
       {createMutation.isError && (

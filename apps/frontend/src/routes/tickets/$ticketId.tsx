@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
 import { createRoute } from '@tanstack/react-router';
+import { useEffect } from 'react';
 
 import { Skeleton, SkeletonText, SkeletonMessage, ErrorState } from '@/components/ui';
+import { useMarkNotificationsReadByTicket } from '@/features/notifications/hooks/useNotifications';
 import { TicketConversation } from '@/features/tickets/components/TicketConversation';
 import { useTicket } from '@/features/tickets/hooks/useTicket';
-import { useMarkNotificationsReadByTicket } from '@/features/notifications/hooks/useNotifications';
 
 import { ticketsRoute } from './index';
 
@@ -28,8 +28,8 @@ function TicketDetailPage() {
 
   // Close sidebar on mobile when a ticket is selected
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent('close-mobile-sidebar'))
-  }, [ticketId])
+    window.dispatchEvent(new CustomEvent('close-mobile-sidebar'));
+  }, [ticketId]);
 
   if (isLoading) {
     return (

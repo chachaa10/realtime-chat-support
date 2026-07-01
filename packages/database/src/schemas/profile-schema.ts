@@ -8,6 +8,8 @@ export const profiles = sqliteTable('profiles', {
     .primaryKey()
     .references(() => users.id),
   role: text('role', { enum: ROLES as unknown as [string, ...string[]] }).notNull(),
-  status: text('status', { enum: ['online', 'away'] }).notNull().default('online'),
+  status: text('status', { enum: ['online', 'away'] })
+    .notNull()
+    .default('online'),
   createdAt: integer('created_at').notNull(),
 });

@@ -1,10 +1,11 @@
-import { io, type Socket } from 'socket.io-client'
+import { io, type Socket } from 'socket.io-client';
 
-const SOCKET_URL = typeof import.meta !== 'undefined' && import.meta.env?.VITE_SOCKET_URL
-  ? import.meta.env.VITE_SOCKET_URL
-  : 'http://localhost:3001'
+const SOCKET_URL =
+  typeof import.meta !== 'undefined' && import.meta.env?.VITE_SOCKET_URL
+    ? import.meta.env.VITE_SOCKET_URL
+    : 'http://localhost:3001';
 
-let socket: Socket | null = null
+let socket: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socket) {
@@ -15,21 +16,21 @@ export function getSocket(): Socket {
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-    })
+    });
   }
-  return socket
+  return socket;
 }
 
 export function connectSocket(): Socket {
-  const s = getSocket()
+  const s = getSocket();
   if (!s.connected) {
-    s.connect()
+    s.connect();
   }
-  return s
+  return s;
 }
 
 export function disconnectSocket(): void {
   if (socket?.connected) {
-    socket.disconnect()
+    socket.disconnect();
   }
 }

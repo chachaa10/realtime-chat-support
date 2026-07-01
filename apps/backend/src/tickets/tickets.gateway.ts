@@ -8,14 +8,14 @@ import {
   type OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { db, profiles, tickets, messages } from '@repo/database';
-import { eq, and, gt, asc } from 'drizzle-orm';
-import { Server, Socket } from 'socket.io';
 import type { Message } from '@repo/shared';
+import { eq, and, gt, asc, sql } from 'drizzle-orm';
+import { Server, Socket } from 'socket.io';
 
 import { auth } from '../auth/auth';
-import type { TicketBroadcaster } from './ticket-broadcaster';
 import type { MessageBroadcaster } from '../messages/message-broadcaster';
 import type { NotificationBroadcaster } from '../notifications/notification-broadcaster';
+import type { TicketBroadcaster } from './ticket-broadcaster';
 
 @Injectable()
 @WebSocketGateway({
@@ -32,6 +32,8 @@ export class TicketsGateway
 {
   @WebSocketServer()
   server!: Server;
+
+  private readonly ticketRoomMembers = new Map<number, Set<string>>();
 
   afterInit() {
     console.log('WebSocket gateway initialized');
@@ -86,8 +88,15 @@ export class TicketsGateway
     }
   }
 
-  handleDisconnect(_client: Socket) {
-    // rooms auto-leave on disconnect
+  handleDisconnect(client: Socket) {
+    const userId = (client as any).userId;
+    if (!userId) return;
+    for (const [ticketId, members] of this.ticketRoomMembers) {
+      if (members.has(userId)) {
+        members.delete(userId);
+        if (members.size === 0) this.ticketRoomMembers.delete(ticketId);
+      }
+    }
   }
 
   @SubscribeMessage('join:ticket')
@@ -101,12 +110,11 @@ export class TicketsGateway
       return;
     }
 
-    const ticketRows = db
-      .select()
-      .from(tickets)
-      .where(eq(tickets.id, ticketId))
-      .limit(1)
-      .all() as { id: number; customerId: string; status: string }[];
+    const ticketRows = db.select().from(tickets).where(eq(tickets.id, ticketId)).limit(1).all() as {
+      id: number;
+      customerId: string;
+      status: string;
+    }[];
 
     if (ticketRows.length === 0) {
       client.emit('error', { code: 'NOT_FOUND', message: 'Ticket not found' });
@@ -121,11 +129,23 @@ export class TicketsGateway
     }
 
     client.join(`ticket:${ticketId}`);
+
+    // Track room membership
+    if (!this.ticketRoomMembers.has(ticketId)) {
+      this.ticketRoomMembers.set(ticketId, new Set());
+    }
+    this.ticketRoomMembers.get(ticketId)!.add(userId);
   }
 
   @SubscribeMessage('leave:ticket')
   handleLeaveTicket(client: Socket, payload: { ticketId: number }) {
-    client.leave(`ticket:${payload.ticketId}`);
+    const { ticketId } = payload;
+    client.leave(`ticket:${ticketId}`);
+    const members = this.ticketRoomMembers.get(ticketId);
+    if (members) {
+      members.delete((client as any).userId);
+      if (members.size === 0) this.ticketRoomMembers.delete(ticketId);
+    }
   }
 
   @SubscribeMessage('typing:start')
@@ -151,22 +171,18 @@ export class TicketsGateway
   }
 
   @SubscribeMessage('reconnect:sync')
-  handleReconnectSync(
-    client: Socket,
-    payload: { ticketId: number; lastMessageTimestamp: number },
-  ) {
+  handleReconnectSync(client: Socket, payload: { ticketId: number; lastMessageTimestamp: number }) {
     const { ticketId, lastMessageTimestamp } = payload;
     const userId = (client as any).userId;
 
     if (!userId) return;
 
     // Check ticket access
-    const ticketRows = db
-      .select()
-      .from(tickets)
-      .where(eq(tickets.id, ticketId))
-      .limit(1)
-      .all() as { id: number; customerId: string; agentId: string | null }[];
+    const ticketRows = db.select().from(tickets).where(eq(tickets.id, ticketId)).limit(1).all() as {
+      id: number;
+      customerId: string;
+      agentId: string | null;
+    }[];
 
     if (ticketRows.length === 0) return;
 
@@ -181,14 +197,16 @@ export class TicketsGateway
     const missedMessages = db
       .select()
       .from(messages)
-      .where(
-        and(
-          eq(messages.ticketId, ticketId),
-          gt(messages.createdAt, lastMessageTimestamp),
-        ),
-      )
+      .where(and(eq(messages.ticketId, ticketId), gt(messages.createdAt, lastMessageTimestamp)))
       .orderBy(asc(messages.createdAt))
-      .all() as { id: number; ticketId: number; authorId: string; body: string; createdAt: number }[];
+      .all() as {
+      id: number;
+      ticketId: number;
+      authorId: string;
+      body: string;
+      status: string;
+      createdAt: number;
+    }[];
 
     client.emit('reconnect:sync', { messages: missedMessages });
   }
@@ -219,10 +237,65 @@ export class TicketsGateway
     this.server?.to(`ticket:${ticketId}`)?.emit('ticket:returned', { ticketId });
   }
 
+  @SubscribeMessage('message:read')
+  handleMessageRead(client: Socket, payload: { ticketId: number }) {
+    const { ticketId } = payload;
+    const userId = (client as any).userId;
+    if (!userId) return;
+
+    const updated = db
+      .update(messages)
+      .set({ status: 'read' })
+      .where(
+        and(
+          eq(messages.ticketId, ticketId),
+          sql`${messages.authorId} != ${userId}`,
+          sql`${messages.status} != 'read'`,
+        ),
+      )
+      .returning()
+      .all() as { id: number }[];
+
+    for (const row of updated) {
+      this.server
+        ?.to(`ticket:${ticketId}`)
+        ?.emit('message:status', { ticketId, messageId: row.id, status: 'read' });
+    }
+  }
+
   // --- MessageBroadcaster ---
 
   messageSent(ticketId: number, message: Message) {
-    this.server?.to(`ticket:${ticketId}`)?.emit('message:sent', { message });
+    let status = message.status;
+
+    // Check if recipient is in the room to mark as delivered
+    const members = this.ticketRoomMembers.get(ticketId);
+    if (members) {
+      const ticketRows = db
+        .select()
+        .from(tickets)
+        .where(eq(tickets.id, ticketId))
+        .limit(1)
+        .all() as { customerId: string; agentId: string | null }[];
+
+      if (ticketRows.length > 0) {
+        const ticket = ticketRows[0];
+        const otherUserId =
+          message.authorId === ticket.customerId ? ticket.agentId : ticket.customerId;
+        if (otherUserId && members.has(otherUserId)) {
+          db.update(messages).set({ status: 'delivered' }).where(eq(messages.id, message.id)).run();
+          status = 'delivered';
+        }
+      }
+    }
+
+    this.server?.to(`ticket:${ticketId}`)?.emit('message:sent', {
+      message: { ...message, status },
+    });
+  }
+
+  messageStatusUpdated(ticketId: number, messageId: number, status: string) {
+    this.server?.to(`ticket:${ticketId}`)?.emit('message:status', { ticketId, messageId, status });
   }
 
   typingStart(ticketId: number, userId: string, userName: string) {

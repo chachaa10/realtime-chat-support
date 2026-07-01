@@ -14,7 +14,7 @@ const ALLOWED_MIME_TYPES = new Set([
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'text/plain',
   'text/csv',
-])
+]);
 
 // checks magic bytes against known signatures
 const MAGIC_SIGNATURES: Array<{ mime: string; bytes: number[]; offset?: number }> = [
@@ -27,37 +27,37 @@ const MAGIC_SIGNATURES: Array<{ mime: string; bytes: number[]; offset?: number }
   { mime: 'video/mp4', bytes: [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70], offset: 4 }, // ftyp box
   { mime: 'video/webm', bytes: [0x1a, 0x45, 0xdf, 0xa3] }, // EBML header
   { mime: 'application/zip', bytes: [0x50, 0x4b, 0x03, 0x04] }, // shared by docx, xlsx, etc.
-]
+];
 
 export function detectMimeType(buffer: Buffer, multerMime?: string): string | null {
   for (const sig of MAGIC_SIGNATURES) {
-    const offset = sig.offset ?? 0
-    if (buffer.length < offset + sig.bytes.length) continue
-    const match = sig.bytes.every((b, i) => buffer[offset + i] === b)
+    const offset = sig.offset ?? 0;
+    if (buffer.length < offset + sig.bytes.length) continue;
+    const match = sig.bytes.every((b, i) => buffer[offset + i] === b);
     if (match) {
       // For RIFF-based formats (webp), verify it's actually webp
       if (sig.mime === 'image/webp') {
-        const webpId = buffer.toString('ascii', 8, 12)
-        if (webpId === 'WEBP') return 'image/webp'
-        continue
+        const webpId = buffer.toString('ascii', 8, 12);
+        if (webpId === 'WEBP') return 'image/webp';
+        continue;
       }
       // For ZIP-based formats, defer to multer's MIME for subtype (docx vs xlsx)
       if (sig.mime === 'application/zip' && multerMime && isAllowedMimeType(multerMime)) {
-        return multerMime
+        return multerMime;
       }
-      return sig.mime
+      return sig.mime;
     }
   }
   // Fallback: accept multer's MIME if it's in the allowed list
   // This handles text/plain, text/csv, and other formats without unique magic signatures
   if (multerMime && isAllowedMimeType(multerMime)) {
-    return multerMime
+    return multerMime;
   }
-  return null
+  return null;
 }
 
 export function isAllowedMimeType(mimeType: string): boolean {
-  return ALLOWED_MIME_TYPES.has(mimeType)
+  return ALLOWED_MIME_TYPES.has(mimeType);
 }
 
-export const MAX_UPLOAD_SIZE = 10 * 1024 * 1024 // 10MB
+export const MAX_UPLOAD_SIZE = 10 * 1024 * 1024; // 10MB
