@@ -4,6 +4,7 @@ import { attachments } from './schemas/attachment-schema';
 import { users, sessions, accounts, verifications } from './schemas/auth-schema';
 import { labels, ticketLabels } from './schemas/label-schema';
 import { messages } from './schemas/message-schema';
+import { notifications } from './schemas/notification-schema';
 import { profiles } from './schemas/profile-schema';
 import { ticketEvents } from './schemas/ticket-event-schema';
 import { tickets } from './schemas/ticket-schema';
@@ -20,6 +21,7 @@ export {
   ticketEvents,
   labels,
   ticketLabels,
+  notifications,
 };
 
 export const relations = defineRelations(
@@ -35,6 +37,7 @@ export const relations = defineRelations(
     ticketEvents,
     labels,
     ticketLabels,
+    notifications,
   },
   (r) => ({
     users: {
@@ -73,6 +76,10 @@ export const relations = defineRelations(
       ticketEvents: r.many.ticketEvents({
         from: r.profiles.id,
         to: r.ticketEvents.actorId,
+      }),
+      notifications: r.many.notifications({
+        from: r.profiles.id,
+        to: r.notifications.userId,
       }),
     },
     tickets: {
@@ -153,6 +160,16 @@ export const relations = defineRelations(
       label: r.one.labels({
         from: r.ticketLabels.labelId,
         to: r.labels.id,
+      }),
+    },
+    notifications: {
+      user: r.one.profiles({
+        from: r.notifications.userId,
+        to: r.profiles.id,
+      }),
+      ticket: r.one.tickets({
+        from: r.notifications.ticketId,
+        to: r.tickets.id,
       }),
     },
   }),

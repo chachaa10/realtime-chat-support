@@ -71,6 +71,7 @@ async function seed() {
       allUsers.map((u) => ({
         id: u.id,
         role: agentIds.has(u.id) ? ('agent' as const) : ('customer' as const),
+        ...(agentIds.has(u.id) ? { status: 'online' as const } : {}),
         createdAt: Date.now(),
       })),
     )
