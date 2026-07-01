@@ -1,10 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { db, tickets, ticketLabels, labels, profiles } from '@repo/database';
-import { eq, and, inArray, sql, desc } from 'drizzle-orm';
+import { db, tickets, ticketLabels, labels, profiles, ticketEvents, notifications } from '@repo/database';
+import { eq, and, inArray, sql, desc, asc } from 'drizzle-orm';
 
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
 import { NotFoundError, ForbiddenError, ConflictError } from '../common/errors';
 import { TICKET_BROADCASTER, type TicketBroadcaster } from './ticket-broadcaster';
+import { NOTIFICATION_BROADCASTER, type NotificationBroadcaster } from '../notifications/notification-broadcaster';
 
 type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'cancelled';
 
@@ -43,7 +44,10 @@ export interface LabelRow {
 
 @Injectable()
 export class TicketsService {
-  constructor(@Inject(TICKET_BROADCASTER) private readonly broadcaster: TicketBroadcaster) {}
+  constructor(
+    @Inject(TICKET_BROADCASTER) private readonly broadcaster: TicketBroadcaster,
+    @Inject(NOTIFICATION_BROADCASTER) private readonly notificationBroadcaster: NotificationBroadcaster,
+  ) {}
 
   create(user: AuthenticatedUser, input: CreateTicketInput) {
     if (user.role !== 'customer') {
@@ -147,18 +151,39 @@ export class TicketsService {
     return this.enrichTicket(ticket);
   }
 
+  getEvents(id: number, user: AuthenticatedUser) {
+    const rows = db.select().from(tickets).where(eq(tickets.id, id)).limit(1).all() as TicketRow[];
+
+    if (rows.length === 0) throw new NotFoundError('Ticket not found');
+
+    const ticket = rows[0];
+
+    if (user.role === 'customer' && ticket.customerId !== user.id) {
+      throw new ForbiddenError('You can only view your own tickets');
+    }
+
+    return db
+      .select({ id: ticketEvents.id, ticketId: ticketEvents.ticketId, fromStatus: ticketEvents.fromStatus, toStatus: ticketEvents.toStatus, actorId: ticketEvents.actorId, createdAt: ticketEvents.createdAt })
+      .from(ticketEvents)
+      .where(eq(ticketEvents.ticketId, id))
+      .orderBy(asc(ticketEvents.createdAt))
+      .all();
+  }
+
   accept(id: number, user: AuthenticatedUser) {
     if (user.role !== 'agent') {
       throw new ForbiddenError('Only agents can accept tickets');
     }
 
-    const inProgressCount = db
-      .select({ count: sql<number>`COUNT(*)` })
-      .from(tickets)
-      .where(and(eq(tickets.agentId, user.id), eq(tickets.status, 'in_progress' as const)))
-      .all() as { count: number }[];
+    const profileRows = db
+      .all(sql`SELECT status FROM profiles WHERE id = ${user.id} LIMIT 1`) as { status: string }[];
 
-    if (inProgressCount[0].count >= AGENT_MAX_CAPACITY) {
+    if (profileRows[0]?.status === 'away') {
+      throw new ConflictError('You are currently away');
+    }
+
+    const capacity = this.getCapacityStatus(user.id);
+    if (capacity.atCapacity) {
       throw new ConflictError('You have reached your capacity limit');
     }
 
@@ -187,6 +212,7 @@ export class TicketsService {
 
     this.recordEvent(id, 'open', 'in_progress', user.id);
     this.broadcaster.ticketAccepted(id);
+    this.createNotification(rows[0].customerId, 'ticket_assigned', id, `Your ticket #${id} has been accepted`);
     return this.enrichTicket(rows[0]);
   }
 
@@ -226,6 +252,7 @@ export class TicketsService {
 
     this.recordEvent(id, 'in_progress', 'resolved', user.id);
     this.broadcaster.ticketResolved(id);
+    this.createNotification(rows[0].customerId, 'ticket_resolved', id, `Your ticket #${id} has been resolved`);
     return this.enrichTicket(rows[0]);
   }
 
@@ -263,6 +290,46 @@ export class TicketsService {
 
     this.recordEvent(id, 'open', 'cancelled', user.id);
     this.broadcaster.ticketCancelled(id);
+    return this.enrichTicket(rows[0]);
+  }
+
+  returnToQueue(id: number, user: AuthenticatedUser) {
+    if (user.role !== 'agent') {
+      throw new ForbiddenError('Only agents can return tickets');
+    }
+
+    const now = Date.now();
+    const rows = db
+      .update(tickets)
+      .set({ status: 'open' as const, agentId: null, updatedAt: now })
+      .where(
+        and(
+          eq(tickets.id, id),
+          eq(tickets.agentId, user.id),
+          eq(tickets.status, 'in_progress' as const),
+        ),
+      )
+      .returning()
+      .all() as TicketRow[];
+
+    if (rows.length === 0) {
+      const current = db
+        .select()
+        .from(tickets)
+        .where(eq(tickets.id, id))
+        .limit(1)
+        .all() as TicketRow[];
+      if (current.length === 0) throw new NotFoundError('Ticket not found');
+      if (current[0].status !== 'in_progress')
+        throw new ConflictError(`Ticket is ${current[0].status}, not in_progress`);
+      if (current[0].agentId !== user.id)
+        throw new ForbiddenError('You can only return your own tickets');
+      throw new ConflictError('Ticket is already assigned');
+    }
+
+    this.recordEvent(id, 'in_progress', 'open', user.id);
+    this.broadcaster.ticketReturnedToQueue(id);
+    this.createNotification(rows[0].customerId, 'ticket_returned', id, `Your ticket #${id} has been returned to the queue`);
     return this.enrichTicket(rows[0]);
   }
 
@@ -364,6 +431,37 @@ export class TicketsService {
     }
 
     return this.formatTicketWithJoins(ticket, ticketLabelsList, customer, agent);
+  }
+
+  private createNotification(
+    userId: string,
+    type: 'ticket_assigned' | 'ticket_resolved' | 'ticket_cancelled' | 'ticket_returned',
+    ticketId: number,
+    message: string,
+  ) {
+    const now = Date.now();
+    const rows = db
+      .insert(notifications)
+      .values({ userId, type, ticketId, message, createdAt: now } as any)
+      .returning()
+      .all() as any[];
+
+    this.notificationBroadcaster.notificationCreated(userId, rows[0]);
+  }
+
+  getCapacityStatus(userId: string): { inProgressCount: number; maxCapacity: number; atCapacity: boolean } {
+    const count = db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(tickets)
+      .where(and(eq(tickets.agentId, userId), eq(tickets.status, 'in_progress' as const)))
+      .all() as { count: number }[];
+
+    const inProgressCount = count[0]?.count ?? 0;
+    return {
+      inProgressCount,
+      maxCapacity: AGENT_MAX_CAPACITY,
+      atCapacity: inProgressCount >= AGENT_MAX_CAPACITY,
+    };
   }
 
   private formatTicketWithJoins(

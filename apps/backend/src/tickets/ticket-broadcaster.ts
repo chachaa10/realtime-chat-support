@@ -3,6 +3,7 @@ export interface TicketBroadcaster {
   ticketAccepted(ticketId: number): void;
   ticketResolved(ticketId: number): void;
   ticketCancelled(ticketId: number): void;
+  ticketReturnedToQueue(ticketId: number): void;
 }
 
 export const TICKET_BROADCASTER = 'TICKET_BROADCASTER';

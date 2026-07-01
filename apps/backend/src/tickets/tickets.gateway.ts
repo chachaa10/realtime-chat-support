@@ -15,6 +15,7 @@ import type { Message } from '@repo/shared';
 import { auth } from '../auth/auth';
 import type { TicketBroadcaster } from './ticket-broadcaster';
 import type { MessageBroadcaster } from '../messages/message-broadcaster';
+import type { NotificationBroadcaster } from '../notifications/notification-broadcaster';
 
 @Injectable()
 @WebSocketGateway({
@@ -26,7 +27,8 @@ export class TicketsGateway
     OnGatewayConnection,
     OnGatewayDisconnect,
     TicketBroadcaster,
-    MessageBroadcaster
+    MessageBroadcaster,
+    NotificationBroadcaster
 {
   @WebSocketServer()
   server!: Server;
@@ -77,6 +79,8 @@ export class TicketsGateway
       if (profile?.role === 'agent') {
         client.join('agents');
       }
+
+      client.join(`user:${session.user.id}`);
     } catch {
       client.disconnect();
     }
@@ -210,6 +214,11 @@ export class TicketsGateway
     this.server?.to(`ticket:${ticketId}`)?.emit('ticket:cancelled', { ticketId });
   }
 
+  ticketReturnedToQueue(ticketId: number) {
+    this.server?.to('agents')?.emit('ticket:returned', { ticketId });
+    this.server?.to(`ticket:${ticketId}`)?.emit('ticket:returned', { ticketId });
+  }
+
   // --- MessageBroadcaster ---
 
   messageSent(ticketId: number, message: Message) {
@@ -222,5 +231,11 @@ export class TicketsGateway
 
   typingStop(ticketId: number, userId: string) {
     this.server?.to(`ticket:${ticketId}`)?.emit('typing:stop', { ticketId, userId });
+  }
+
+  // --- NotificationBroadcaster ---
+
+  notificationCreated(userId: string, notification: any) {
+    this.server?.to(`user:${userId}`)?.emit('notification:new', { notification });
   }
 }

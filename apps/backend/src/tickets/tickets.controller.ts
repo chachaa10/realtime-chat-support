@@ -63,6 +63,20 @@ export class TicketsController {
     return { data: tickets };
   }
 
+  @Get('capacity-status')
+  @Roles('agent')
+  async capacityStatus(@CurrentUser() user: AuthenticatedUser) {
+    const status = await this.ticketsService.getCapacityStatus(user.id);
+    return { data: status };
+  }
+
+  @Get(':id/events')
+  @Roles('customer', 'agent')
+  async getEvents(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
+    const events = await this.ticketsService.getEvents(id, user);
+    return { data: events };
+  }
+
   @Get(':id')
   @Roles('customer', 'agent')
   async findById(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
@@ -88,6 +102,13 @@ export class TicketsController {
   @Roles('customer')
   async cancel(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
     const ticket = await this.ticketsService.cancel(id, user);
+    return { data: ticket };
+  }
+
+  @Patch(':id/return-to-queue')
+  @Roles('agent')
+  async returnToQueue(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
+    const ticket = await this.ticketsService.returnToQueue(id, user);
     return { data: ticket };
   }
 
