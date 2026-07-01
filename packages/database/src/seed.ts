@@ -24,11 +24,8 @@ const LABELS = [
 ];
 
 const STATIC_USERS = [
-  { name: 'Alice Agent', email: 'alice@test.com', password: 'password123', role: 'agent' as const },
-  { name: 'Bob Agent', email: 'bob@test.com', password: 'password123', role: 'agent' as const },
-  { name: 'Charlie Customer', email: 'charlie@test.com', password: 'password123', role: 'customer' as const },
-  { name: 'Diana Customer', email: 'diana@test.com', password: 'password123', role: 'customer' as const },
-  { name: 'Ed Customer', email: 'ed@test.com', password: 'password123', role: 'customer' as const },
+  { name: 'Agent', email: 'agent@test.com', password: 'password123', role: 'agent' as const },
+  { name: 'Customer', email: 'customer@agent.com', password: 'password123', role: 'customer' as const },
 ];
 
 async function seed() {
@@ -118,40 +115,30 @@ async function seed() {
   }[];
 
   const now = Date.now();
-  const statuses: ('open' | 'in_progress' | 'resolved' | 'cancelled')[] = [
-    'open', 'in_progress', 'resolved', 'cancelled', 'open', 'in_progress', 'open', 'resolved',
+  const ticketConfigs: { status: 'open' | 'in_progress' | 'resolved' | 'cancelled'; subject: string }[] = [
+    { status: 'open', subject: 'Cannot access my account' },
+    { status: 'open', subject: 'Feature request: dark mode' },
+    { status: 'in_progress', subject: 'Payment not processed' },
+    { status: 'in_progress', subject: 'Slow response times' },
+    { status: 'resolved', subject: 'Error when uploading file' },
+    { status: 'cancelled', subject: 'Refund request' },
   ];
-  const ticketValues = customerIds.flatMap((customerId, i) => {
-    const count = 1 + (i % 2);
-    return Array.from({ length: count }, (_, j) => {
-      const idx = (i * count + j) % statuses.length;
-      const status = statuses[idx];
-      const isAssigned = status === 'in_progress' || status === 'resolved';
-      const agentId = isAssigned ? faker.helpers.arrayElement(agentIds) : null;
-      const offset = (i * count + j) * 60000;
-      return {
-        subject: faker.helpers.arrayElement([
-          'Cannot access my account',
-          'Payment not processed',
-          'Error when uploading file',
-          'Feature request: dark mode',
-          'Login page broken',
-          'Refund request',
-          'Slow response times',
-          'Password reset not working',
-          'Need help with setup',
-          'Billing discrepancy',
-        ]),
-        description: faker.lorem.paragraph(),
-        status,
-        customerId,
-        agentId,
-        createdAt: now - offset,
-        updatedAt: now - offset,
-        resolvedAt: status === 'resolved' ? now - offset + 30000 : null,
-        cancelledAt: status === 'cancelled' ? now - offset + 30000 : null,
-      };
-    });
+  const ticketValues = ticketConfigs.flatMap((cfg, i) => {
+    const customerId = faker.helpers.arrayElement(customerIds);
+    const isAssigned = cfg.status === 'in_progress' || cfg.status === 'resolved';
+    const agentId = isAssigned ? faker.helpers.arrayElement(agentIds) : null;
+    const offset = i * 60000;
+    return {
+      subject: cfg.subject,
+      description: faker.lorem.paragraph(),
+      status: cfg.status,
+      customerId,
+      agentId,
+      createdAt: now - offset,
+      updatedAt: now - offset,
+      resolvedAt: cfg.status === 'resolved' ? now - offset + 30000 : null,
+      cancelledAt: cfg.status === 'cancelled' ? now - offset + 30000 : null,
+    };
   });
 
   const ticketRows = db.insert(schema.tickets).values(ticketValues).returning().all() as {
