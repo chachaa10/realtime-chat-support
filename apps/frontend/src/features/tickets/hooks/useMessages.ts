@@ -67,6 +67,8 @@ export function useMessages(ticketId: number) {
   const handleTicketStatusChange = useCallback(
     (_data: { ticketId: number }) => {
       queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] });
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['events', ticketId] });
     },
     [ticketId, queryClient],
   );
@@ -88,6 +90,7 @@ export function useMessages(ticketId: number) {
     socket.on('ticket:returned', handleTicketStatusChange);
 
     socket.on('connect', () => {
+      socket.emit('join:ticket', { ticketId });
       const cached = queryClient.getQueryData<MessageWithAttachments[]>(['messages', ticketId]);
       if (cached && cached.length > 0) {
         const lastTimestamp = cached[cached.length - 1].createdAt;
