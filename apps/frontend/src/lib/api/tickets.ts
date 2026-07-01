@@ -85,6 +85,7 @@ export interface EventData {
   fromStatus: string | null;
   toStatus: string;
   actorId: string;
+  actorName: string | null;
   createdAt: number;
 }
 

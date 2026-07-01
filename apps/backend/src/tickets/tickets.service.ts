@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { db, tickets, ticketLabels, labels, profiles, ticketEvents, notifications } from '@repo/database';
+import { db, tickets, ticketLabels, labels, profiles, users, ticketEvents, notifications } from '@repo/database';
 import { eq, and, inArray, sql, desc, asc, lt, gt } from 'drizzle-orm';
 
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
@@ -195,8 +195,17 @@ export class TicketsService {
     }
 
     return db
-      .select({ id: ticketEvents.id, ticketId: ticketEvents.ticketId, fromStatus: ticketEvents.fromStatus, toStatus: ticketEvents.toStatus, actorId: ticketEvents.actorId, createdAt: ticketEvents.createdAt })
+      .select({
+        id: ticketEvents.id,
+        ticketId: ticketEvents.ticketId,
+        fromStatus: ticketEvents.fromStatus,
+        toStatus: ticketEvents.toStatus,
+        actorId: ticketEvents.actorId,
+        actorName: sql<string>`COALESCE(${users.name}, ${ticketEvents.actorId})`,
+        createdAt: ticketEvents.createdAt,
+      })
       .from(ticketEvents)
+      .leftJoin(users, eq(ticketEvents.actorId, users.id))
       .where(eq(ticketEvents.ticketId, id))
       .orderBy(asc(ticketEvents.createdAt))
       .all();
