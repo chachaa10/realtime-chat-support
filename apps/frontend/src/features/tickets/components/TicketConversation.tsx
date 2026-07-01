@@ -1,5 +1,10 @@
+import { useRef, useState } from 'react'
+import { toast } from 'sonner'
+
 import { useAuth } from '@/features/auth/context'
 import type { TicketData } from '@/lib/api/tickets'
+import { sendMessage } from '@/lib/api/messages'
+import { uploadFileWithProgress } from '@/lib/api/uploads'
 
 import { useAcceptTicket, useResolveTicket, useCancelTicket, useReturnToQueue } from '../hooks/useTicketMutations'
 import { useMessages } from '../hooks/useMessages'
@@ -26,12 +31,69 @@ export function TicketConversation({ ticket }: TicketConversationProps) {
   const cancelMutation = useCancelTicket()
   const returnMutation = useReturnToQueue()
 
-  const { data: messages, isLoading: messagesLoading, isError: messagesError, refetch: refetchMessages } = useMessages(ticket.id)
-  const typingIndicator = useTypingIndicator(ticket.id)
-  const { data: capacity } = useAgentCapacity()
+  const [dragOver, setDragOver] = useState(false)
+  const dragCounter = useRef(0)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+
+  function handleDragEnter(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current++
+    if (dragCounter.current === 1) setDragOver(true)
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current--
+    if (dragCounter.current === 0) setDragOver(false)
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragOver(false)
+    dragCounter.current = 0
+
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File must be smaller than 10MB')
+      return
+    }
+
+    uploadDroppedFile(file)
+  }
+
+  async function uploadDroppedFile(file: File) {
+    setUploading(true)
+    setUploadProgress(0)
+    try {
+      const attachment = await uploadFileWithProgress(file, ticket.id, (pct) => {
+        setUploadProgress(pct)
+      })
+      await sendMessage(ticket.id, '', [attachment.id])
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+      setUploadProgress(0)
+    }
+  }
 
   const isCustomer = user?.role === 'customer'
   const isAgent = user?.role === 'agent'
+
+  const { data: messages, isLoading: messagesLoading, isError: messagesError, refetch: refetchMessages } = useMessages(ticket.id)
+  const typingIndicator = useTypingIndicator(ticket.id)
+  const { data: capacity } = useAgentCapacity(isAgent)
   const isOwnTicket = isCustomer && ticket.customerId === user?.id
   const isAssignedAgent = isAgent && ticket.agentId === user?.id
 
@@ -46,7 +108,30 @@ export function TicketConversation({ ticket }: TicketConversationProps) {
   const inputDisabled = isCustomer && isResolvedOrCancelled
 
   return (
-    <div className="flex h-full flex-col">
+    <div
+      className="relative flex h-full flex-col"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {uploading && uploadProgress > 0 && (
+        <div className="absolute top-0 left-0 right-0 z-20 h-1">
+          <div className="h-full rounded-full bg-brand transition-all duration-200 ease-out" style={{ width: `${uploadProgress}%` }} />
+        </div>
+      )}
+      {dragOver && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-brand/10">
+          <div className="flex flex-col items-center gap-2">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span className="text-brand text-base font-medium">Drop file to attach</span>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between gap-3 border-b border-border px-6 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <span
@@ -63,13 +148,10 @@ export function TicketConversation({ ticket }: TicketConversationProps) {
           <div className="min-w-0">
             <h1 className="text-ink truncate text-[0.9375rem] font-semibold">{ticket.subject}</h1>
             <p className="text-ink-muted truncate text-[0.75rem]">
-              {ticket.status === 'open' && 'Open'}
-              {ticket.status === 'in_progress' && 'In progress'}
-              {ticket.status === 'resolved' && 'Resolved'}
-              {ticket.status === 'cancelled' && 'Cancelled'}
-              {ticket.resolvedAt && ` · Resolved ${formatDate(ticket.resolvedAt)}`}
-              {ticket.cancelledAt && ` · Cancelled ${formatDate(ticket.cancelledAt)}`}
-              {!ticket.resolvedAt && !ticket.cancelledAt && ` · Created ${formatDate(ticket.createdAt)}`}
+              {ticket.status === 'open' && `Open · Created ${formatDate(ticket.createdAt)}`}
+              {ticket.status === 'in_progress' && `In progress · Created ${formatDate(ticket.createdAt)}`}
+              {ticket.status === 'resolved' && `Resolved · ${formatDate(ticket.resolvedAt!)}`}
+              {ticket.status === 'cancelled' && `Cancelled · ${formatDate(ticket.cancelledAt!)}`}
             </p>
           </div>
         </div>

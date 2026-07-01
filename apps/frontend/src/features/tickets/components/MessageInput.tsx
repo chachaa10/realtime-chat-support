@@ -16,13 +16,11 @@ export function MessageInput({ ticketId, disabled, disabledReason }: MessageInpu
   const [input, setInput] = useState('')
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [dragOver, setDragOver] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isTypingRef = useRef(false)
   const sendMutation = useSendMessage(ticketId)
-  const dragCounter = useRef(0)
 
   const emitTypingStart = useCallback(() => {
     const socket = getSocket()
@@ -101,37 +99,6 @@ export function MessageInput({ ticketId, disabled, disabledReason }: MessageInpu
     }
   }
 
-  function handleDragEnter(e: React.DragEvent) {
-    e.preventDefault()
-    e.stopPropagation()
-    dragCounter.current++
-    if (dragCounter.current === 1) setDragOver(true)
-  }
-
-  function handleDragLeave(e: React.DragEvent) {
-    e.preventDefault()
-    e.stopPropagation()
-    dragCounter.current--
-    if (dragCounter.current === 0) setDragOver(false)
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragOver(false)
-    dragCounter.current = 0
-
-    const file = e.dataTransfer.files?.[0]
-    if (!file) return
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File must be smaller than 10MB')
-      return
-    }
-
-    handleUpload(file)
-  }
-
   async function handleUpload(file: File) {
     setUploading(true)
     setUploadProgress(0)
@@ -158,25 +125,7 @@ export function MessageInput({ ticketId, disabled, disabledReason }: MessageInpu
   const canSend = input.trim().length > 0 && !isDisabled
 
   return (
-    <div
-      className="relative border-t border-border bg-surface px-4 py-3"
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
-      onDrop={handleDrop}
-    >
-      {dragOver && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-brand/10">
-          <div className="flex flex-col items-center gap-2">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            <span className="text-brand text-sm font-medium">Drop file to attach</span>
-          </div>
-        </div>
-      )}
+    <div className="border-border bg-surface border-t px-4 py-3">
       <input
         ref={fileInputRef}
         type="file"
