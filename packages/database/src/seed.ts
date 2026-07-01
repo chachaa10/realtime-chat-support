@@ -6,6 +6,8 @@ import { initEnv, env } from '@repo/shared/init-env';
 import Database from 'better-sqlite3';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 
 import * as schema from './schema';
 
@@ -21,61 +23,93 @@ const LABELS = [
   { name: 'urgent', color: '#f97316' },
 ];
 
+const STATIC_USERS = [
+  { name: 'Alice Agent', email: 'alice@test.com', password: 'password123', role: 'agent' as const },
+  { name: 'Bob Agent', email: 'bob@test.com', password: 'password123', role: 'agent' as const },
+  { name: 'Charlie Customer', email: 'charlie@test.com', password: 'password123', role: 'customer' as const },
+  { name: 'Diana Customer', email: 'diana@test.com', password: 'password123', role: 'customer' as const },
+  { name: 'Ed Customer', email: 'ed@test.com', password: 'password123', role: 'customer' as const },
+];
+
 async function seed() {
   const client = new Database(env.DATABASE_PATH);
   const db = drizzle({ client, schema });
 
   console.log('Seeding database...');
 
-  const agents = faker.helpers.multiple(
-    () => {
-      const id = faker.string.uuid();
-      const now = new Date();
-      return {
-        id,
-        name: faker.person.fullName(),
-        email: faker.internet.email().toLowerCase(),
-        emailVerified: true,
-        image: faker.image.avatarGitHub(),
-        createdAt: now,
-        updatedAt: now,
-      };
-    },
-    { count: 3 },
-  );
+  db.run(sql`DELETE FROM ticket_labels`);
+  db.run(sql`DELETE FROM ticket_events`);
+  db.run(sql`DELETE FROM messages`);
+  db.run(sql`DELETE FROM attachments`);
+  db.run(sql`DELETE FROM notifications`);
+  db.run(sql`DELETE FROM tickets`);
+  db.run(sql`DELETE FROM profiles`);
+  db.run(sql`DELETE FROM sessions`);
+  db.run(sql`DELETE FROM accounts`);
+  db.run(sql`DELETE FROM verifications`);
+  db.run(sql`DELETE FROM users`);
+  db.run(sql`DELETE FROM labels`);
 
-  const customers = faker.helpers.multiple(
-    () => {
-      const id = faker.string.uuid();
-      const now = new Date();
-      return {
-        id,
-        name: faker.person.fullName(),
-        email: faker.internet.email().toLowerCase(),
-        emailVerified: faker.datatype.boolean(0.7),
-        image: faker.image.avatarGitHub(),
-        createdAt: now,
-        updatedAt: now,
-      };
-    },
-    { count: 5 },
-  );
+  const auth = betterAuth({
+    database: drizzleAdapter(db, { provider: 'sqlite', schema, camelCase: false, usePlural: true }),
+    secret: env.BETTER_AUTH_SECRET,
+    baseURL: env.BETTER_AUTH_URL,
+    emailAndPassword: { enabled: true },
+    rateLimit: { enabled: false },
+  });
 
-  const agentIds = new Set(agents.map((u) => u.id));
-  const customerIds = customers.map((u) => u.id);
-  const allUsers = [...agents, ...customers];
-  db.insert(schema.users).values(allUsers).run();
+  const agentIds: string[] = [];
+  const customerIds: string[] = [];
 
-  db.insert(schema.profiles)
-    .values(
-      allUsers.map((u) => ({
-        id: u.id,
-        role: agentIds.has(u.id) ? ('agent' as const) : ('customer' as const),
-        ...(agentIds.has(u.id) ? { status: 'online' as const } : {}),
-        createdAt: Date.now(),
-      })),
-    )
-    .run();
+  for (const u of STATIC_USERS) {
+    let registeredUser: { id: string };
+    try {
+      const result = await auth.api.signUpEmail({
+        body: { name: u.name, email: u.email, password: u.password },
+      });
+      registeredUser = result.user;
+    } catch {
+      try {
+        registeredUser = db
+          .select({ id: schema.users.id })
+          .from(schema.users)
+          .where(sql`email = ${u.email}`)
+          .get() as { id: string };
+      } catch {
+        console.error(`  Could not find or create user: ${u.email}`);
+        continue;
+      }
+    }
+
+    if (!registeredUser) {
+      console.error(`  Could not find or create user: ${u.email}`);
+      continue;
+    }
+
+    try {
+      db.insert(schema.profiles)
+        .values({ id: registeredUser.id, role: u.role, createdAt: Date.now() })
+        .run();
+    } catch {
+      // profile already exists
+    }
+
+    if (u.role === 'agent') {
+      db.update(schema.profiles)
+        .set({ status: 'online' })
+        .where(sql`id = ${registeredUser.id}`)
+        .run();
+      agentIds.push(registeredUser.id);
+    } else {
+      customerIds.push(registeredUser.id);
+    }
+
+    console.log(`  Created user: ${u.email} (${u.role})`);
+  }
+
+  if (agentIds.length === 0 || customerIds.length === 0) {
+    throw new Error('Failed to create agents or customers');
+  }
 
   const labelRows = db.insert(schema.labels).values(LABELS).returning().all() as {
     id: number;
@@ -86,15 +120,15 @@ async function seed() {
   const now = Date.now();
   const statuses: ('open' | 'in_progress' | 'resolved' | 'cancelled')[] = [
     'open', 'in_progress', 'resolved', 'cancelled', 'open', 'in_progress', 'open', 'resolved',
-  ]
+  ];
   const ticketValues = customerIds.flatMap((customerId, i) => {
     const count = 1 + (i % 2);
     return Array.from({ length: count }, (_, j) => {
-      const idx = (i * count + j) % statuses.length
-      const status = statuses[idx]
-      const isAssigned = status === 'in_progress' || status === 'resolved'
-      const agentId = isAssigned ? faker.helpers.arrayElement([...agentIds]) : null
-      const offset = (i * count + j) * 60000
+      const idx = (i * count + j) % statuses.length;
+      const status = statuses[idx];
+      const isAssigned = status === 'in_progress' || status === 'resolved';
+      const agentId = isAssigned ? faker.helpers.arrayElement(agentIds) : null;
+      const offset = (i * count + j) * 60000;
       return {
         subject: faker.helpers.arrayElement([
           'Cannot access my account',
@@ -129,33 +163,29 @@ async function seed() {
   }[];
 
   for (const t of ticketRows) {
-    const customerActor = customerIds[0]
-    const agentActor = faker.helpers.arrayElement([...agentIds])
+    const customerActor = faker.helpers.arrayElement(customerIds);
+    const agentActor = faker.helpers.arrayElement(agentIds);
 
-    // null → open (ticket created)
     db.run(
       sql`INSERT INTO ticket_events (ticket_id, from_status, to_status, actor_id, created_at) VALUES (${t.id}, NULL, 'open', ${customerActor}, ${t.createdAt})`,
-    )
+    );
 
     if (t.status === 'in_progress' || t.status === 'resolved') {
-      // open → in_progress (agent assigned)
       db.run(
         sql`INSERT INTO ticket_events (ticket_id, from_status, to_status, actor_id, created_at) VALUES (${t.id}, 'open', 'in_progress', ${agentActor}, ${t.createdAt + 10000})`,
-      )
+      );
     }
 
     if (t.status === 'resolved') {
-      // in_progress → resolved (ticket resolved)
       db.run(
         sql`INSERT INTO ticket_events (ticket_id, from_status, to_status, actor_id, created_at) VALUES (${t.id}, 'in_progress', 'resolved', ${agentActor}, ${t.resolvedAt!})`,
-      )
+      );
     }
 
     if (t.status === 'cancelled') {
-      // open → cancelled (customer cancelled)
       db.run(
         sql`INSERT INTO ticket_events (ticket_id, from_status, to_status, actor_id, created_at) VALUES (${t.id}, 'open', 'cancelled', ${customerActor}, ${t.cancelledAt!})`,
-      )
+      );
     }
   }
 
@@ -174,7 +204,7 @@ async function seed() {
   }
 
   console.log(
-    `Inserted ${allUsers.length} users, ${labelRows.length} labels, ${ticketRows.length} tickets.`,
+    `  Inserted ${agentIds.length + customerIds.length} users, ${labelRows.length} labels, ${ticketRows.length} tickets.`,
   );
   client.close();
 }
