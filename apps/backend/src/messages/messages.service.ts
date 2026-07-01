@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { db, tickets, messages, attachments, notifications as notificationsTable } from '@repo/database';
-import { eq, and, asc, inArray, gt } from 'drizzle-orm';
+import { db, tickets, messages, attachments, users, notifications as notificationsTable } from '@repo/database';
+import { eq, and, asc, inArray, gt, sql } from 'drizzle-orm';
 import type { Message } from '@repo/shared';
 
 import type { AuthenticatedUser } from '../auth/guards/jwt-auth.guard';
@@ -54,8 +54,16 @@ export class MessagesService {
     const limit = options.limit ?? 50
 
     const rows = db
-      .select()
+      .select({
+        id: messages.id,
+        ticketId: messages.ticketId,
+        authorId: messages.authorId,
+        authorName: sql<string>`COALESCE(${users.name}, ${messages.authorId})`,
+        body: messages.body,
+        createdAt: messages.createdAt,
+      })
       .from(messages)
+      .leftJoin(users, eq(messages.authorId, users.id))
       .where(and(...conditions))
       .orderBy(asc(messages.createdAt))
       .limit(limit + 1)
@@ -95,6 +103,7 @@ export class MessagesService {
       .all() as Message[]
 
     const message = rows[0]
+    message.authorName = user.name
 
     if (attachmentIds?.length) {
       for (const attachmentId of attachmentIds) {

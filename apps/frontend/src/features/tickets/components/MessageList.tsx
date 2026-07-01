@@ -59,7 +59,7 @@ export function MessageList({ messages, isLoading, isError, typingIndicator, onR
             key={message.id}
             message={message}
             isOwn={message.authorId === user?.id}
-            authorName={message.authorId === user?.id ? 'You' : message.authorId}
+            authorName={message.authorId === user?.id ? 'You' : message.authorName}
           />
         ))}
         {typingIndicator && (
