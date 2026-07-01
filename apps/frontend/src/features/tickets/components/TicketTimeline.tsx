@@ -11,7 +11,8 @@ function eventLabel(event: EventData): { text: string; color: string } {
     return { text: 'Ticket created', color: 'bg-brand' };
   }
   if (event.fromStatus === 'open' && event.toStatus === 'in_progress') {
-    return { text: 'Agent assigned', color: 'bg-accent' };
+    const name = event.actorName ?? event.actorId
+    return { text: `Assigned to ${name}`, color: 'bg-accent' };
   }
   if (event.fromStatus === 'in_progress' && event.toStatus === 'resolved') {
     return { text: 'Ticket resolved', color: 'bg-success' };
@@ -24,6 +25,8 @@ function eventLabel(event: EventData): { text: string; color: string } {
   }
   return { text: `${event.fromStatus ?? ''} → ${event.toStatus}`, color: 'bg-ink-dim' };
 }
+
+const CUSTOMER_VISIBLE = new Set(['open', 'in_progress', 'resolved', 'cancelled'])
 
 interface TicketTimelineProps {
   ticketId: number;
@@ -39,15 +42,21 @@ export function TicketTimeline({ ticketId, role }: TicketTimelineProps) {
 
   if (isLoading || isError || !events || events.length === 0) return null;
 
+  const visibleEvents = role === 'customer'
+    ? events.filter((e) => e.toStatus && CUSTOMER_VISIBLE.has(e.toStatus))
+    : events
+
+  if (visibleEvents.length === 0) return null
+
   return (
     <div className="border-border border-b px-6 py-4">
       <h3 className="text-ink-muted mb-3 text-[0.75rem] font-semibold uppercase tracking-wider">
         {role === 'customer' ? 'Timeline' : 'Event Log'}
       </h3>
       <div className="relative space-y-1">
-        {events.map((event, i) => {
+        {visibleEvents.map((event, i) => {
           const { text, color } = eventLabel(event);
-          const isLast = i === events.length - 1;
+          const isLast = i === visibleEvents.length - 1;
           return (
             <div key={event.id} className="flex items-start gap-2.5">
               <div className="flex flex-col items-center">
