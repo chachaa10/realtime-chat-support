@@ -1,7 +1,8 @@
 import { Outlet, createRoute, useMatch } from '@tanstack/react-router';
-import { Menu } from 'lucide-react';
+import { PanelLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
+import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import { TicketSidebar } from '@/features/tickets/components/TicketSidebar';
 
 import { rootRoute } from '../__root';
@@ -22,31 +23,42 @@ export const ticketsRoute = createRoute({
 function TicketsLayout() {
   const detailMatch = useMatch({ from: ticketDetailRoute.id, shouldThrow: false });
   const activeTicketId = detailMatch ? Number(detailMatch.params.ticketId) : undefined;
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isDesktop = useBreakpoint(768);
+  const [sidebarOpen, setSidebarOpen] = useState(isDesktop);
 
+  // Sync with breakpoint on resize
+  useEffect(() => {
+    setSidebarOpen(isDesktop);
+  }, [isDesktop]);
+
+  // Close sidebar on custom event (e.g., ticket selected on mobile)
   useEffect(() => {
     function handleClose() {
       setSidebarOpen(false);
     }
-    window.addEventListener('close-mobile-sidebar', handleClose);
-    return () => window.removeEventListener('close-mobile-sidebar', handleClose);
+    window.addEventListener('close-sidebar', handleClose);
+    return () => window.removeEventListener('close-sidebar', handleClose);
   }, []);
 
   return (
     <div className="flex h-full">
       {/* Mobile overlay backdrop */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/30 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar - overlay on mobile, normal on md+ */}
       <div
-        className={`${
-          sidebarOpen ? 'fixed inset-y-0 left-0 z-50 w-[300px]' : 'hidden w-0'
-        } shrink-0 md:relative md:flex md:w-[300px]`}
+        className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 ease-in-out ${
+          sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        } md:hidden`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* Sidebar - overlay on mobile, push on md+ */}
+      <div
+        className={`
+          fixed inset-y-0 left-0 z-50
+          shrink-0 w-[300px] transition-all duration-300 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:relative md:inset-auto md:z-auto md:translate-x-0
+          ${sidebarOpen ? '' : 'md:w-0 md:overflow-hidden'}
+        `}
       >
         <TicketSidebar
           activeTicketId={activeTicketId}
@@ -57,14 +69,14 @@ function TicketsLayout() {
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Mobile header with hamburger */}
-        <div className="border-border flex items-center gap-2 border-b px-4 py-2 md:hidden">
+        {/* Top header with sidebar toggle */}
+        <div className="border-border flex items-center gap-2 border-b px-4 py-2">
           <button
-            onClick={() => setSidebarOpen(true)}
+            onClick={() => setSidebarOpen((p) => !p)}
             className="text-ink-muted hover:text-ink inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-            aria-label="Open sidebar"
+            aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           >
-            <Menu size={18} />
+            <PanelLeft size={18} />
           </button>
           <span className="text-ink text-sm font-semibold">Chat Support</span>
         </div>
