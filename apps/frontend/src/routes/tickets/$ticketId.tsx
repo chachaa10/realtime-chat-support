@@ -26,6 +26,11 @@ function TicketDetailPage() {
     }
   }, [id]);
 
+  // Close sidebar on mobile when a ticket is selected
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('close-mobile-sidebar'))
+  }, [ticketId])
+
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">

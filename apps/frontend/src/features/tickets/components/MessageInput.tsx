@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 
 import { Spinner } from '@/components/ui'
 import { getSocket } from '@/lib/socket'
-import { uploadFile } from '@/lib/api/uploads'
+import { uploadFileWithProgress } from '@/lib/api/uploads'
 import { useSendMessage } from '../hooks/useSendMessage'
 
 interface MessageInputProps {
@@ -15,6 +15,7 @@ interface MessageInputProps {
 export function MessageInput({ ticketId, disabled, disabledReason }: MessageInputProps) {
   const [input, setInput] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -80,8 +81,11 @@ export function MessageInput({ ticketId, disabled, disabledReason }: MessageInpu
     }
 
     setUploading(true)
+    setUploadProgress(0)
     try {
-      const attachment = await uploadFile(file, ticketId)
+      const attachment = await uploadFileWithProgress(file, ticketId, (pct) => {
+        setUploadProgress(pct)
+      })
       const body = input.trim()
       if (body) {
         sendMutation.mutate({ body, attachmentIds: [attachment.id] })
@@ -93,6 +97,7 @@ export function MessageInput({ ticketId, disabled, disabledReason }: MessageInpu
       toast.error(err instanceof Error ? err.message : 'Upload failed')
     } finally {
       setUploading(false)
+      setUploadProgress(0)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
@@ -186,6 +191,16 @@ export function MessageInput({ ticketId, disabled, disabledReason }: MessageInpu
           )}
         </button>
       </div>
+      {uploading && uploadProgress > 0 && (
+        <div className="mx-auto mt-2 max-w-3xl">
+          <div className="h-1 w-full rounded-full bg-ink/10 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-brand transition-all duration-200 ease-out"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
