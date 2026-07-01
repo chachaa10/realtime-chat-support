@@ -1,7 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { Document, Page, pdfjs } from 'react-pdf'
 
 import type { MessageWithAttachments } from '@/lib/api/messages'
 import { fetchAttachmentAsBlob } from '@/lib/api/uploads'
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString()
 
 const API_BASE =
   typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL
@@ -142,11 +148,11 @@ function AttachmentPreview({ attachmentId, fileName, mimeType }: { attachmentId:
 
     if (pdf) {
       return (
-        <iframe
-          src={url}
-          className="h-[90vh] w-[90vw] rounded-lg"
-          title={fileName}
-        />
+        <div className="max-h-[85vh] w-[90vw] overflow-y-auto rounded-lg bg-white">
+          <Document file={url} loading={<div className="flex h-48 items-center justify-center text-sm text-ink-dim">Loading PDF...</div>}>
+            <Page pageNumber={1} />
+          </Document>
+        </div>
       )
     }
 
