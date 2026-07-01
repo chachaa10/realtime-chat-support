@@ -8,6 +8,7 @@ export { TicketSchema, CreateTicketSchema, TicketStatus } from './validations/ti
 export { MessageSchema, SendMessageSchema } from './validations/message-validation';
 export { AttachmentSchema } from './validations/attachment-validation';
 export { LabelSchema } from './validations/label-validation';
+export { NotificationSchema } from './validations/notification-validation';
 export type { Profile } from './types/profile';
 export type { LoginInput, RegisterInput } from './types/auth';
 export type {
