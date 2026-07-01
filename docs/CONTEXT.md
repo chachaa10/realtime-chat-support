@@ -1,4 +1,4 @@
-# Real-time Chat Support
+# Pulse
 
 A real-time helpdesk chat support application. Customers submit tickets describing their issues; agents pick tickets from a queue and resolve them via real-time chat. Built to practice backend engineering (NestJS, WebSockets) with a deliberately separated frontend SPA.
 

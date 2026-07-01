@@ -1,4 +1,4 @@
-# Realtime Chat Support
+# Pulse
 
 A real-time helpdesk where customers submit tickets describing their issues and
 agents pick them from a queue to resolve via live conversation.
