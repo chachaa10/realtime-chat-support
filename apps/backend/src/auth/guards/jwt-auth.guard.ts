@@ -1,4 +1,4 @@
-import { Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common';
+import { Injectable, UnauthorizedException, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { db, profiles } from '@repo/database';
 import { fromNodeHeaders } from 'better-auth/node';
 import { eq } from 'drizzle-orm';
@@ -20,7 +20,7 @@ export class JwtAuthGuard implements CanActivate {
     const headers = new Headers(fromNodeHeaders(request.headers));
     const session = await auth.api.getSession({ headers });
 
-    if (!session?.user) return false;
+    if (!session?.user) throw new UnauthorizedException({ code: 'UNAUTHORIZED', message: 'Unauthorized' });
 
     const profileRows = db
       .select()
