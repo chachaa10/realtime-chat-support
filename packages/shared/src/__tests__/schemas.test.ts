@@ -108,6 +108,7 @@ describe('MessageSchema', () => {
         id: 1,
         ticketId: 1,
         authorId: 'u1',
+        authorName: 'Alice',
         body: 'Hello',
         createdAt: 1000,
       }).success,

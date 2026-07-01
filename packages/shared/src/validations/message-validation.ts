@@ -4,6 +4,7 @@ export const MessageSchema = z.object({
   id: z.number(),
   ticketId: z.number(),
   authorId: z.string(),
+  authorName: z.string(),
   body: z
     .string()
     .min(1, { error: 'Message cannot be empty' })
